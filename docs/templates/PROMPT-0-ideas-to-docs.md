@@ -12,10 +12,10 @@ You will receive:
 You will generate **COMPLETE documentation** in one pass:
 1. **File organization plan** (YAML)
 2. **User story files** in `docs/01-user-stories/[module]/generated/`
-3. **Feature specification files** in `docs/02-features/[module]/`
-4. **OpenAPI snippets** in `docs/03-api-spec/snippets/`
-5. **Index/README files** for navigation
-6. **Processing notes** with decisions and recommendations
+3. **Feature specification files** in `docs/02-features/[module]/` with detailed endpoint specifications
+4. **Index/README files** for navigation
+5. **Processing notes** with decisions and recommendations
+6. **OPTIONAL: API spec snippets** in `docs/03-api-spec/snippets/` (can skip if not needed)
 
 ---
 
@@ -48,19 +48,20 @@ You will generate **COMPLETE documentation** in one pass:
 │   STEP 3: GENERATE FEATURE SPECS                        │
 │   Output: docs/02-features/01-auth/                     │
 │           FEATURE-1-authentication.md                   │
+│   (Includes complete endpoint specifications)           │
 └────────────────┬────────────────────────────────────────┘
                  │
                  ▼
 ┌─────────────────────────────────────────────────────────┐
-│   STEP 4: GENERATE API SPECS                            │
-│   Output: docs/03-api-spec/snippets/                    │
-│           authentication-endpoints.yaml                 │
-└────────────────┬────────────────────────────────────────┘
-                 │
-                 ▼
-┌─────────────────────────────────────────────────────────┐
-│   STEP 5: GENERATE INDEXES                              │
+│   STEP 4: GENERATE INDEXES                              │
 │   Output: README files for navigation                   │
+└────────────────┬────────────────────────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────────────────────────┐
+│   OPTIONAL: GENERATE API SPECS                          │
+│   Output: docs/03-api-spec/snippets/*.yaml (or .tsp)    │
+│   (Skip if using TypeSpec or custom format later)       │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -268,15 +269,18 @@ file_organization_plan:
       user_stories: [US-3.1, US-3.2]
       endpoints_count: 4
 
-  openapi_files:
+  api_spec_files:  # OPTIONAL - can skip if using TypeSpec later
     - path: "docs/03-api-spec/snippets/authentication-endpoints.yaml"
       feature: "FEATURE-1"
+      note: "Optional - can be generated later from feature specs"
 
     - path: "docs/03-api-spec/snippets/posts-endpoints.yaml"
       feature: "FEATURE-2"
+      note: "Optional - can be generated later from feature specs"
 
     - path: "docs/03-api-spec/snippets/social-endpoints.yaml"
       feature: "FEATURE-3"
+      note: "Optional - can be generated later from feature specs"
 
   index_files:
     - path: "docs/01-user-stories/README.md"
@@ -360,9 +364,11 @@ See `docs/templates/FEATURE-TEMPLATE.md` for complete format.
 
 ---
 
-## PART 5: GENERATE OPENAPI SNIPPETS
+## PART 5: GENERATE API SPECS (OPTIONAL)
 
-For each feature, create a valid OpenAPI 3.0 snippet.
+**NOTE**: This part is OPTIONAL. Skip if you're planning to use TypeSpec or another API specification format.
+
+For each feature, you can optionally create OpenAPI 3.0 snippets OR TypeSpec definitions.
 
 **Format:**
 ```yaml
@@ -587,22 +593,9 @@ Your complete output should be structured as:
 
 ---
 
-## 3. OpenAPI Snippet Files
+## 3. Index Files
 
-### File 3.1: authentication-endpoints.yaml
-
-**Path**: `docs/03-api-spec/snippets/authentication-endpoints.yaml`
-
-**Content:**
-```yaml
-[... complete OpenAPI snippet ...]
-```
-
----
-
-## 4. Index Files
-
-### File 4.1: User Stories Index
+### File 3.1: User Stories Index
 
 **Path**: `docs/01-user-stories/README.md`
 
@@ -613,7 +606,7 @@ Your complete output should be structured as:
 
 ---
 
-### File 4.2: Features Index
+### File 3.2: Features Index
 
 **Path**: `docs/02-features/README.md`
 

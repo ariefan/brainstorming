@@ -62,18 +62,18 @@ Step 2: User Stories → Feature Specifications (PROMPT-2)
 │   ✓ Analyzes raw ideas                                         │
 │   ✓ Decides module organization                                │
 │   ✓ Generates user stories                                     │
-│   ✓ Generates feature specs                                    │
-│   ✓ Generates OpenAPI specs                                    │
+│   ✓ Generates feature specs with endpoint details              │
 │   ✓ Creates all index files                                    │
+│   ○ Optional: API specs (OpenAPI/TypeSpec) for later           │
 └──────────────────┬──────────────────────────────────────────────┘
                    │
                    ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │   OUTPUT: Complete Documentation                                │
 │   → docs/01-user-stories/[modules]/generated/US-*.md           │
-│   → docs/02-features/[modules]/FEATURE-*.md                    │
-│   → docs/03-api-spec/snippets/*.yaml                           │
+│   → docs/02-features/[modules]/FEATURE-*.md (with endpoints)   │
 │   → All README files                                            │
+│   ○ Optional: docs/03-api-spec/snippets/*.yaml (or .tsp)       │
 └──────────────────┬──────────────────────────────────────────────┘
                    │
                    ▼

@@ -27,10 +27,10 @@ cat docs/templates/PROMPT-0-ideas-to-docs.md
 ```
 
 Copy the prompt, paste into your AI agent (Claude, ChatGPT, etc.), and provide your raw idea file. The AI will generate **everything**:
-- User stories
-- Feature specifications
-- API specs
-- All documentation
+- User stories (structured with acceptance criteria)
+- Feature specifications (with complete endpoint details)
+- All README/index files
+- _Optional: API specs (OpenAPI/TypeSpec) - can be generated later_
 
 ### Step 3: Copy Generated Files
 
@@ -56,8 +56,8 @@ docs/
 ├── 02-features/           ← Generated: Technical feature specs
 │   └── [modules]/
 │
-├── 03-api-spec/          ← Generated: OpenAPI specifications
-│   └── snippets/
+├── 03-api-spec/          ← Optional: API specs (OpenAPI/TypeSpec)
+│   └── snippets/         (Can be generated later)
 │
 └── templates/             ← AI prompts and templates
     ├── PROMPT-0-ideas-to-docs.md       ← NEW: One-step process
@@ -125,17 +125,17 @@ From a single raw idea file, the AI creates:
 - Organized by module with proper IDs (US-1.1, US-1.2, etc.)
 
 ### Feature Specifications (`02-features/`)
-- Complete API endpoint specifications
+- Complete API endpoint specifications (HTTP methods, paths, parameters)
 - Request/response schemas
 - Data models and relationships
 - Error handling and status codes
 - Security considerations
 - Testing requirements
 
-### API Specifications (`03-api-spec/`)
-- OpenAPI 3.0 snippets for each feature
-- Ready to merge into main API spec
-- Complete with schemas, responses, examples
+### API Specifications (`03-api-spec/`) - OPTIONAL
+- OpenAPI 3.0 or TypeSpec definitions
+- Can be generated later from feature specs
+- Not required for initial development
 
 ### Navigation (`README files`)
 - Module-level indexes
@@ -161,20 +161,18 @@ docs/01-user-stories/01-authentication/generated/
 
 docs/02-features/01-authentication/
   └── FEATURE-1-authentication.md
-
-docs/03-api-spec/snippets/
-  └── authentication-endpoints.yaml
+      (Contains all endpoint specifications)
 
 + All README files
 ```
 
-**API Endpoints Created:**
-- `POST /api/v1/auth/register`
-- `POST /api/v1/auth/verify-email`
-- `POST /api/v1/auth/login`
-- `POST /api/v1/auth/logout`
+**API Endpoints Documented in Feature Spec:**
+- `POST /api/v1/auth/register` - Complete request/response schemas
+- `POST /api/v1/auth/verify-email` - Error codes and validation
+- `POST /api/v1/auth/login` - Security considerations
+- `POST /api/v1/auth/logout` - Authentication requirements
 
-All with complete specs, schemas, error handling, etc.
+All endpoints fully specified in the feature documentation!
 
 ---
 

@@ -15,13 +15,11 @@ Other users can like and comment on posts.
 - `docs/01-user-stories/01-authentication/generated/US-1.1-1.2-auth.md`
 - `docs/01-user-stories/02-posts/generated/US-2.1-2.3-post-management.md`
 - `docs/01-user-stories/03-social/generated/US-3.1-3.2-interactions.md`
-- `docs/02-features/01-authentication/FEATURE-1-auth.md`
-- `docs/02-features/02-posts/FEATURE-2-posts.md`
-- `docs/02-features/03-social/FEATURE-3-social.md`
-- `docs/03-api-spec/snippets/authentication-endpoints.yaml`
-- `docs/03-api-spec/snippets/posts-endpoints.yaml`
-- `docs/03-api-spec/snippets/social-endpoints.yaml`
+- `docs/02-features/01-authentication/FEATURE-1-auth.md` (with all endpoints!)
+- `docs/02-features/02-posts/FEATURE-2-posts.md` (with all endpoints!)
+- `docs/02-features/03-social/FEATURE-3-social.md` (with all endpoints!)
 - All README/index files
+- _Optional: API spec files (can generate later with TypeSpec)_
 
 All from ONE AI prompt!
 
@@ -72,10 +70,10 @@ Now, process the following raw idea:
 The AI will provide:
 - File organization plan (what folders/files it will create)
 - Complete user story files
-- Complete feature specification files
-- Complete OpenAPI snippets
+- Complete feature specification files (with endpoint details)
 - All README/index files
 - Processing notes with decisions and assumptions
+- _Optional: API spec snippets (OpenAPI/TypeSpec) - can skip for now_
 
 **Review checklist:**
 - Does the module breakdown make sense?

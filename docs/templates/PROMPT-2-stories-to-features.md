@@ -10,10 +10,10 @@ You will receive:
 
 ## Output
 You will generate:
-1. **One or more feature specification files**
+1. **One or more feature specification files** with detailed endpoint specifications
 2. **File placement instructions**
 3. **Updated index/README**
-4. **OpenAPI spec snippets** (to be merged into main spec)
+4. **OPTIONAL: API spec snippets** (OpenAPI/TypeSpec - can skip if generating later)
 
 ---
 
@@ -98,9 +98,10 @@ file_organization_plan:
       endpoints_count: 6
       reason: "All authentication-related operations, manageable in single file"
   
-  openapi_snippets:
+  api_spec_snippets:  # OPTIONAL - can skip if using TypeSpec later
     - path: "docs/03-api-spec/snippets/authentication-endpoints.yaml"
-      description: "OpenAPI spec for authentication endpoints"
+      description: "OpenAPI spec for authentication endpoints (optional)"
+      note: "Can be generated later from feature specs"
   
   index_updates:
     - path: "docs/02-features/01-authentication/README.md"
@@ -275,9 +276,11 @@ This feature is split into sub-features:
 
 ---
 
-## PART 5: Generate OpenAPI Snippets
+## PART 5: Generate API Specs (OPTIONAL)
 
-For each feature, create OpenAPI snippet that can be merged into main spec:
+**NOTE**: This part is OPTIONAL. Skip if you're planning to use TypeSpec or another API specification format.
+
+For each feature, you can optionally create OpenAPI 3.0 snippets OR TypeSpec definitions that can be merged into the main spec:
 
 **File**: `docs/03-api-spec/snippets/authentication-endpoints.yaml`
 
