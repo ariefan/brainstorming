@@ -1,7 +1,7 @@
 # AI-Powered Documentation Generation System
 
-> **Version**: 1.0  
-> **Last Updated**: 2025-12-25  
+> **Version**: 2.0
+> **Last Updated**: 2025-12-25
 > **Purpose**: Convert free-text requirements into structured user stories and technical specifications
 
 ---
@@ -22,11 +22,18 @@
 
 ## 🎯 Overview
 
-This system helps you transform informal product requirements into professional, AI-ready documentation through a 2-step process:
+This system helps you transform informal product requirements into professional, AI-ready documentation. Choose your workflow:
 
+### **NEW: One-Step Process (Recommended)**
 ```
-Step 1: Free Text → Structured User Stories
-Step 2: User Stories → Feature Specifications (with API endpoints)
+Raw Ideas → Complete Documentation (User Stories + Features + API Specs)
+Using: PROMPT-0-ideas-to-docs.md
+```
+
+### **Classic: Two-Step Process**
+```
+Step 1: Free Text → Structured User Stories (PROMPT-1)
+Step 2: User Stories → Feature Specifications (PROMPT-2)
 ```
 
 ### Benefits
@@ -41,44 +48,55 @@ Step 2: User Stories → Feature Specifications (with API endpoints)
 
 ## 🔄 Workflow
 
-### The Complete Process
+### **NEW: One-Step Workflow (Recommended)**
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    NON-ENGINEER WRITES                          │
-│  "I want users to register with email and get verification..."  │
+│   STEP 0: Drop your raw ideas in docs/00-raw-ideas/            │
+│   "I want users to register and login..."                      │
 └──────────────────┬──────────────────────────────────────────────┘
                    │
                    ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                  STEP 1: PROMPT-1 (AI Agent)                    │
-│                 Generates Structured User Story                 │
-│                                                                 │
-│  Output: US-1.1-user-registration.md                           │
-│  - Given-When-Then acceptance criteria                         │
-│  - Data requirements                                           │
-│  - Business rules                                              │
-│  - Validation rules                                            │
+│   AI AGENT (PROMPT-0) - Single Pass Processing                 │
+│   ✓ Analyzes raw ideas                                         │
+│   ✓ Decides module organization                                │
+│   ✓ Generates user stories                                     │
+│   ✓ Generates feature specs                                    │
+│   ✓ Generates OpenAPI specs                                    │
+│   ✓ Creates all index files                                    │
+└──────────────────┬──────────────────────────────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────────────────────────────┐
+│   OUTPUT: Complete Documentation                                │
+│   → docs/01-user-stories/[modules]/generated/US-*.md           │
+│   → docs/02-features/[modules]/FEATURE-*.md                    │
+│   → docs/03-api-spec/snippets/*.yaml                           │
+│   → All README files                                            │
 └──────────────────┬──────────────────────────────────────────────┘
                    │
                    ▼
          ┌─────────────────┐
-         │  HUMAN REVIEWS   │
-         │  AND APPROVES    │
-         └────────┬─────────┘
-                  │
-                  ▼
+         │  READY FOR       │
+         │  DEVELOPMENT     │
+         └──────────────────┘
+```
+
+### Classic Two-Step Workflow
+
+For more control over the process, you can still use the classic approach:
+
+```
 ┌─────────────────────────────────────────────────────────────────┐
-│                  STEP 2: PROMPT-2 (AI Agent)                    │
-│              Generates Feature Specification                    │
-│                                                                 │
-│  Output: FEATURE-1-authentication.md                           │
-│  - API endpoints (POST /api/v1/auth/register)                 │
-│  - Request/response schemas                                    │
-│  - Error codes                                                 │
-│  - Data models                                                 │
-│  - Security considerations                                     │
-│  - OpenAPI snippets                                            │
+│   STEP 1: PROMPT-1 (AI Agent)                                   │
+│   Free Text → Structured User Stories                          │
+└──────────────────┬──────────────────────────────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────────────────────────────┐
+│   STEP 2: PROMPT-2 (AI Agent)                                   │
+│   User Stories → Feature Specifications                        │
 └──────────────────┬──────────────────────────────────────────────┘
                    │
                    ▼
@@ -97,6 +115,10 @@ Your project documentation will be organized like this:
 ```
 project-name/
 ├── docs/
+│   ├── 00-raw-ideas/                           # NEW: Drop zone for brainstorming
+│   │   ├── feature-name.txt                    # Your raw ideas (any format)
+│   │   └── README.md                            # Processing status tracking
+│   │
 │   ├── 01-user-stories/
 │   │   ├── 01-authentication/
 │   │   │   ├── raw/
@@ -141,35 +163,59 @@ project-name/
 - Basic understanding of your product requirements
 - Text editor or IDE
 
-### 5-Minute Setup
+### **NEW: 3-Minute Setup (One-Step Workflow)**
+
+1. **Create project structure**
+```bash
+mkdir -p docs/{00-raw-ideas,01-user-stories,02-features,03-api-spec/snippets,templates}
+```
+
+2. **Write your brainstorming notes**
+```bash
+cat > docs/00-raw-ideas/my-feature.txt << 'EOF'
+I want users to register with email and password.
+They should get a verification email.
+After verifying, they can login.
+EOF
+```
+
+3. **Process with AI (PROMPT-0)**
+- Copy content from `PROMPT-0-ideas-to-docs.md`
+- Paste into your AI agent
+- Provide the raw idea file content
+- Get COMPLETE documentation in one go:
+  - User stories
+  - Feature specs
+  - OpenAPI specs
+  - All README files
+
+**Done!** Complete documentation ready for development.
+
+---
+
+### Classic: 5-Minute Setup (Two-Step Workflow)
 
 1. **Create project structure**
 ```bash
 mkdir -p docs/{01-user-stories,02-features,03-api-spec/snippets,templates}
 ```
 
-2. **Copy templates to your project**
+2. **Write your first requirement**
 ```bash
-# Copy all template files to docs/templates/
-```
-
-3. **Write your first requirement**
-```bash
-# Create a free-text file
 cat > docs/01-user-stories/01-authentication/raw/01-registration.txt << 'EOF'
-I want users to be able to register with their email address. They should 
-receive a verification email. Email must be unique. Password should be at 
+I want users to be able to register with their email address. They should
+receive a verification email. Email must be unique. Password should be at
 least 8 characters.
 EOF
 ```
 
-4. **Generate user story using PROMPT-1**
+3. **Generate user story using PROMPT-1**
 - Copy content from `PROMPT-1-raw-to-stories.md`
 - Paste into your AI agent
 - Provide your free-text requirement
 - Save the generated output
 
-5. **Generate feature spec using PROMPT-2**
+4. **Generate feature spec using PROMPT-2**
 - Copy content from `PROMPT-2-stories-to-features.md`
 - Paste into your AI agent
 - Provide the generated user story

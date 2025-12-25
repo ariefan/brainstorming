@@ -1,0 +1,94 @@
+EXAMPLE: Social Media App Features
+
+This is an example raw idea file. Replace this with your own brainstorming!
+
+====================================
+WHAT I WANT TO BUILD
+====================================
+
+I want to build a simple social media app where users can share their thoughts and interact with each other.
+
+USER FEATURES:
+
+Registration & Authentication:
+- Users should register with email and password
+- Send verification email after registration
+- They can only login if email is verified
+- Password must be at least 8 characters
+
+Posts:
+- Users can create posts with text and images
+- Posts can be up to 500 characters
+- Users can attach one image per post
+- Users can edit their own posts within 24 hours
+- Users can delete their own posts anytime
+- When viewing posts, show author name, post time, and content
+
+Social Interactions:
+- Users can like posts (unlimited)
+- Users can unlike posts
+- Show like count on each post
+- Users can comment on posts
+- Comments are text only, max 200 characters
+- Users can delete their own comments
+- Show all comments under each post
+
+Feed:
+- Users see a feed of all posts (newest first)
+- Add pagination - 20 posts per page
+- Filter posts by specific user
+
+VALIDATION RULES:
+
+Email:
+- Must be valid email format
+- Must be unique - can't register twice with same email
+
+Password:
+- Minimum 8 characters
+- Must contain at least one uppercase, one lowercase, and one number
+
+Posts:
+- Text is required (can't post empty)
+- Maximum 500 characters
+- Image is optional
+- Supported image formats: JPG, PNG, GIF
+- Maximum image size: 5MB
+
+Comments:
+- Text is required
+- Maximum 200 characters
+
+BUSINESS RULES:
+
+- Users can only edit/delete their own posts
+- Users can only delete their own comments
+- Anyone can like/comment on anyone's posts
+- Deleted posts should remove all likes and comments
+- Email verification link expires after 24 hours
+
+NOTIFICATIONS (maybe later?):
+- Email when someone likes your post
+- Email when someone comments on your post
+
+====================================
+TECHNICAL NOTES
+====================================
+
+Not sure about these, but thinking:
+- Store images in cloud storage (S3 or similar)
+- Use JWT tokens for authentication
+- Need database for users, posts, comments, likes
+- API should be RESTful
+
+====================================
+QUESTIONS
+====================================
+
+- Should we support multiple images per post?
+- Should comments support images too?
+- Do we need user profiles?
+- Should there be private/public posts?
+- Do we need follow/unfollow features?
+
+For now, keep it simple. These can be Phase 2.
