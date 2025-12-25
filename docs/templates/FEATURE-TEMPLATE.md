@@ -1,9 +1,11 @@
 # [FEATURE-X.Y]: Feature Name
 
-> **Module**: [Module Name]  
-> **Related User Stories**: US-X.Y, US-X.Z  
-> **Implementation Priority**: P0 | P1 | P2 | P3  
+> **Module**: [Module Name]
+> **Related User Stories**: US-X.Y, US-X.Z
+> **Implementation Priority**: P0 | P1 | P2 | P3
 > **Status**: 📝 Design | 🚧 Development | 🧪 Testing | ✅ Released
+
+> **📌 Note**: This document contains complete API endpoint specifications. All request/response schemas, error codes, and endpoint details are documented below. External API spec files (OpenAPI/TypeSpec) are optional and can be generated from this document.
 
 ---
 
@@ -448,9 +450,13 @@ RATE_LIMIT=100
 
 ## Documentation
 
-### API Documentation
-- OpenAPI/Swagger spec: [Link]
-- Postman collection: [Link]
+### API Specification
+**NOTE**: All API endpoint specifications are documented in the [API Endpoints](#api-endpoints) section above. This feature document serves as the source of truth for endpoint details.
+
+**Optional External Formats:**
+- OpenAPI/Swagger spec: _[Can be generated from this doc]_
+- TypeSpec definition: _[Can be generated from this doc]_
+- Postman collection: _[Can be generated from endpoints above]_
 
 ### Developer Guide
 - Setup instructions: [Link]
