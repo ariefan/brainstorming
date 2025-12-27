@@ -87,10 +87,16 @@ export const appointments = pgTable(
     }),
     cancellationReason: text("cancellation_reason"),
     noShowAt: timestamp("no_show_at"),
-    notes: text("notes"),
     bpjsAntreanKodeBooking: varchar("bpjs_antrean_kode_booking", {
       length: 30,
     }),
+
+    // Sync Status - JKN/BPJS Antrean
+    isJknSynced: boolean("is_jkn_synced").default(false),
+    jknSyncedAt: timestamp("jkn_synced_at"),
+    jknSyncError: text("jkn_sync_error"),
+
+    notes: text("notes"),
   },
   (table) => [
     index("idx_appointment_org_id").on(table.organizationId),
@@ -101,6 +107,7 @@ export const appointments = pgTable(
     uniqueIndex("idx_appointment_number").on(table.appointmentNumber),
     index("idx_appointment_date").on(table.appointmentDate),
     index("idx_appointment_status").on(table.status),
+    index("idx_appointment_jkn_synced").on(table.isJknSynced),
   ]
 );
 

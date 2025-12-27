@@ -78,6 +78,17 @@ export const patients = pgTable(
     }),
     bpjsNumber: varchar("bpjs_number", { length: 20 }), // BPJS card number
     satusehatIhsId: varchar("satusehat_ihs_id", { length: 100 }), // SatuSehat patient ID
+
+    // Sync Status - SatuSehat
+    isSatusehatSynced: boolean("is_satusehat_synced").default(false),
+    satusehatSyncedAt: timestamp("satusehat_synced_at"),
+    satusehatSyncError: text("satusehat_sync_error"),
+
+    // Sync Status - JKN/BPJS (verification status)
+    isJknVerified: boolean("is_jkn_verified").default(false),
+    jknVerifiedAt: timestamp("jkn_verified_at"),
+    jknVerificationError: text("jkn_verification_error"),
+
     notes: text("notes"),
   },
   (table) => [
@@ -90,6 +101,8 @@ export const patients = pgTable(
     index("idx_patient_status").on(table.status),
     index("idx_patient_bpjs_number").on(table.bpjsNumber),
     index("idx_patient_satusehat_ihs_id").on(table.satusehatIhsId),
+    index("idx_patient_satusehat_synced").on(table.isSatusehatSynced),
+    index("idx_patient_jkn_verified").on(table.isJknVerified),
   ]
 );
 

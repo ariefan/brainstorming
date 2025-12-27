@@ -4,7 +4,10 @@
       "Bash(grep:*)",
       "Bash(wc:*)",
       "Bash(paste:*)",
-      "Bash(bc:*)"
+      "Bash(bc:*)",
+      "Bash(npx tsc:*)",
+      "Bash(PGPASSWORD=postgres psql:*)",
+      "Bash(npx drizzle-kit push)"
     ]
   }
 }

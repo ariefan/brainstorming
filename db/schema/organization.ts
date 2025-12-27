@@ -50,6 +50,17 @@ export const organizations = pgTable(
     licenseExpiry: timestamp("license_expiry"),
     satusehatOrgId: varchar("satusehat_org_id", { length: 100 }), // SatuSehat organization ID
     bpjsPpkCode: varchar("bpjs_ppk_code", { length: 20 }), // BPJS facility code
+
+    // Sync Status - SatuSehat
+    isSatusehatSynced: boolean("is_satusehat_synced").default(false),
+    satusehatSyncedAt: timestamp("satusehat_synced_at"),
+    satusehatSyncError: text("satusehat_sync_error"),
+
+    // Sync Status - JKN/BPJS
+    isJknSynced: boolean("is_jkn_synced").default(false),
+    jknSyncedAt: timestamp("jkn_synced_at"),
+    jknSyncError: text("jkn_sync_error"),
+
     subscriptionPlan:
       subscriptionPlanEnum("subscription_plan").default("basic"),
     subscriptionStart: timestamp("subscription_start"),
@@ -70,6 +81,8 @@ export const organizations = pgTable(
     index("idx_satusehat_org_id").on(table.satusehatOrgId),
     index("idx_bpjs_ppk_code").on(table.bpjsPpkCode),
     index("idx_org_active").on(table.isActive),
+    index("idx_org_satusehat_synced").on(table.isSatusehatSynced),
+    index("idx_org_jkn_synced").on(table.isJknSynced),
   ]
 );
 
@@ -101,6 +114,12 @@ export const branches = pgTable(
     latitude: varchar("latitude", { length: 20 }),
     longitude: varchar("longitude", { length: 20 }),
     satusehatLocationId: varchar("satusehat_location_id", { length: 100 }), // SatuSehat location ID
+
+    // Sync Status - SatuSehat
+    isSatusehatSynced: boolean("is_satusehat_synced").default(false),
+    satusehatSyncedAt: timestamp("satusehat_synced_at"),
+    satusehatSyncError: text("satusehat_sync_error"),
+
     operatingHours: jsonb("operating_hours").$type<{
       monday?: { open: string; close: string; closed?: boolean };
       tuesday?: { open: string; close: string; closed?: boolean };
@@ -118,6 +137,7 @@ export const branches = pgTable(
     uniqueIndex("idx_branch_code").on(table.organizationId, table.branchCode),
     index("idx_branch_satusehat_id").on(table.satusehatLocationId),
     index("idx_branch_active").on(table.isActive),
+    index("idx_branch_satusehat_synced").on(table.isSatusehatSynced),
   ]
 );
 

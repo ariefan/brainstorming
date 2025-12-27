@@ -92,6 +92,16 @@ export const encounters = pgTable(
     satusehatEncounterId: varchar("satusehat_encounter_id", { length: 100 }),
     bpjsSepNumber: varchar("bpjs_sep_number", { length: 30 }),
     notes: text("notes"),
+
+    // Sync Status - SatuSehat
+    isSatusehatSynced: boolean("is_satusehat_synced").default(false),
+    satusehatSyncedAt: timestamp("satusehat_synced_at"),
+    satusehatSyncError: text("satusehat_sync_error"),
+
+    // Sync Status - JKN/BPJS
+    isJknSynced: boolean("is_jkn_synced").default(false),
+    jknSyncedAt: timestamp("jkn_synced_at"),
+    jknSyncError: text("jkn_sync_error"),
   },
   (table) => [
     index("idx_encounter_org_id").on(table.organizationId),
@@ -103,6 +113,8 @@ export const encounters = pgTable(
     uniqueIndex("idx_encounter_number").on(table.encounterNumber),
     index("idx_encounter_date").on(table.encounterDate),
     index("idx_encounter_status").on(table.status),
+    index("idx_encounter_satusehat_synced").on(table.isSatusehatSynced),
+    index("idx_encounter_jkn_synced").on(table.isJknSynced),
   ]
 );
 
@@ -207,12 +219,24 @@ export const diagnoses = pgTable(
     isPrimary: boolean("is_primary").default(false),
     notes: text("notes"),
     satusehatConditionId: varchar("satusehat_condition_id", { length: 100 }),
+
+    // Sync Status - SatuSehat
+    isSatusehatSynced: boolean("is_satusehat_synced").default(false),
+    satusehatSyncedAt: timestamp("satusehat_synced_at"),
+    satusehatSyncError: text("satusehat_sync_error"),
+
+    // Sync Status - JKN/BPJS
+    isJknSynced: boolean("is_jkn_synced").default(false),
+    jknSyncedAt: timestamp("jkn_synced_at"),
+    jknSyncError: text("jkn_sync_error"),
   },
   (table) => [
     index("idx_diagnosis_encounter_id").on(table.encounterId),
     index("idx_diagnosis_icd10").on(table.icd10Code),
     index("idx_diagnosis_type").on(table.diagnosisType),
     index("idx_diagnosis_primary").on(table.isPrimary),
+    index("idx_diagnosis_satusehat_synced").on(table.isSatusehatSynced),
+    index("idx_diagnosis_jkn_synced").on(table.isJknSynced),
   ]
 );
 
@@ -245,11 +269,23 @@ export const prescriptions = pgTable(
     satusehatMedicationRequestId: varchar("satusehat_medication_request_id", {
       length: 100,
     }),
+
+    // Sync Status - SatuSehat
+    isSatusehatSynced: boolean("is_satusehat_synced").default(false),
+    satusehatSyncedAt: timestamp("satusehat_synced_at"),
+    satusehatSyncError: text("satusehat_sync_error"),
+
+    // Sync Status - JKN/BPJS
+    isJknSynced: boolean("is_jkn_synced").default(false),
+    jknSyncedAt: timestamp("jkn_synced_at"),
+    jknSyncError: text("jkn_sync_error"),
   },
   (table) => [
     index("idx_prescription_encounter_id").on(table.encounterId),
     uniqueIndex("idx_prescription_number").on(table.prescriptionNumber),
     index("idx_prescription_status").on(table.status),
+    index("idx_prescription_satusehat_synced").on(table.isSatusehatSynced),
+    index("idx_prescription_jkn_synced").on(table.isJknSynced),
   ]
 );
 

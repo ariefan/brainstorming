@@ -56,6 +56,17 @@ export const polyclinics = pgTable(
     queuePrefix: varchar("queue_prefix", { length: 5 }), // e.g., "A", "B", "C"
     satusehatLocationId: varchar("satusehat_location_id", { length: 100 }), // SatuSehat location ID
     bpjsPoliCode: varchar("bpjs_poli_code", { length: 20 }), // BPJS polyclinic code
+
+    // Sync Status - SatuSehat
+    isSatusehatSynced: boolean("is_satusehat_synced").default(false),
+    satusehatSyncedAt: timestamp("satusehat_synced_at"),
+    satusehatSyncError: text("satusehat_sync_error"),
+
+    // Sync Status - JKN/BPJS
+    isJknSynced: boolean("is_jkn_synced").default(false),
+    jknSyncedAt: timestamp("jkn_synced_at"),
+    jknSyncError: text("jkn_sync_error"),
+
     operatingHours: jsonb("operating_hours").$type<{
       monday?: { open: string; close: string; closed?: boolean };
       tuesday?: { open: string; close: string; closed?: boolean };
@@ -78,6 +89,8 @@ export const polyclinics = pgTable(
     index("idx_polyclinic_satusehat_id").on(table.satusehatLocationId),
     index("idx_polyclinic_bpjs_code").on(table.bpjsPoliCode),
     index("idx_polyclinic_active").on(table.isActive),
+    index("idx_polyclinic_satusehat_synced").on(table.isSatusehatSynced),
+    index("idx_polyclinic_jkn_synced").on(table.isJknSynced),
   ]
 );
 
@@ -118,6 +131,17 @@ export const practitioners = pgTable(
     nip: varchar("nip", { length: 30 }), // Indonesian employee number
     str: varchar("str", { length: 50 }), // Indonesian doctor registration number
     sip: varchar("sip", { length: 50 }), // Indonesian practice permit
+
+    // Sync Status - SatuSehat
+    isSatusehatSynced: boolean("is_satusehat_synced").default(false),
+    satusehatSyncedAt: timestamp("satusehat_synced_at"),
+    satusehatSyncError: text("satusehat_sync_error"),
+
+    // Sync Status - JKN/BPJS
+    isJknSynced: boolean("is_jkn_synced").default(false),
+    jknSyncedAt: timestamp("jkn_synced_at"),
+    jknSyncError: text("jkn_sync_error"),
+
     isActive: boolean("is_active").default(true),
     photoUrl: varchar("photo_url", { length: 500 }),
     bio: text("bio"),
@@ -145,6 +169,8 @@ export const practitioners = pgTable(
     index("idx_practitioner_specialty").on(table.specialty),
     index("idx_practitioner_satusehat_ihs_id").on(table.satusehatIhsId),
     index("idx_practitioner_active").on(table.isActive),
+    index("idx_practitioner_satusehat_synced").on(table.isSatusehatSynced),
+    index("idx_practitioner_jkn_synced").on(table.isJknSynced),
   ]
 );
 

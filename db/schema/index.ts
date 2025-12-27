@@ -43,7 +43,19 @@ export * from "./billing";
 export * from "./satusehat";
 
 // BPJS Kesehatan integration tables
-export * from "./bpjs";
+export * from "./jkn-config";
+export * from "./jkn-vclaim";
+export * from "./jkn-prb";
+export * from "./jkn-rencana-kontrol";
+export * from "./jkn-lpk";
+export * from "./jkn-antrean";
+export * from "./jkn-antrean-fktp";
+export * from "./jkn-apotek";
+export * from "./jkn-aplicares";
+export * from "./jkn-icare";
+export * from "./jkn-rekam-medis";
+export * from "./jkn-referensi";
+export * from "./jkn-sync";
 
 // Reporting and analytics tables
 export * from "./reports";

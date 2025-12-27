@@ -278,12 +278,27 @@ export const labResults = pgTable(
       onDelete: "set null",
     }),
     notes: text("notes"),
+
+    // SatuSehat Integration
+    satusehatObservationId: varchar("satusehat_observation_id", { length: 100 }),
+
+    // Sync Status - SatuSehat
+    isSatusehatSynced: boolean("is_satusehat_synced").default(false),
+    satusehatSyncedAt: timestamp("satusehat_synced_at"),
+    satusehatSyncError: text("satusehat_sync_error"),
+
+    // Sync Status - JKN/BPJS
+    isJknSynced: boolean("is_jkn_synced").default(false),
+    jknSyncedAt: timestamp("jkn_synced_at"),
+    jknSyncError: text("jkn_sync_error"),
   },
   (table) => [
     index("idx_lab_result_order_item_id").on(table.orderItemId),
     index("idx_lab_result_specimen_id").on(table.specimenId),
     index("idx_lab_result_status").on(table.status),
     index("idx_lab_result_date").on(table.resultDate),
+    index("idx_lab_result_satusehat_synced").on(table.isSatusehatSynced),
+    index("idx_lab_result_jkn_synced").on(table.isJknSynced),
   ]
 );
 
@@ -317,6 +332,21 @@ export const diagnosticReports = pgTable(
       .references(() => users.id, { onDelete: "set null" }),
     conclusion: text("conclusion"),
     notes: text("notes"),
+
+    // SatuSehat Integration
+    satusehatDiagnosticReportId: varchar("satusehat_diagnostic_report_id", {
+      length: 100,
+    }),
+
+    // Sync Status - SatuSehat
+    isSatusehatSynced: boolean("is_satusehat_synced").default(false),
+    satusehatSyncedAt: timestamp("satusehat_synced_at"),
+    satusehatSyncError: text("satusehat_sync_error"),
+
+    // Sync Status - JKN/BPJS
+    isJknSynced: boolean("is_jkn_synced").default(false),
+    jknSyncedAt: timestamp("jkn_synced_at"),
+    jknSyncError: text("jkn_sync_error"),
   },
   (table) => [
     index("idx_diagnostic_report_org_id").on(table.organizationId),
@@ -326,6 +356,8 @@ export const diagnosticReports = pgTable(
     uniqueIndex("idx_diagnostic_report_number").on(table.reportNumber),
     index("idx_diagnostic_report_status").on(table.status),
     index("idx_diagnostic_report_date").on(table.reportDate),
+    index("idx_diagnostic_report_satusehat_synced").on(table.isSatusehatSynced),
+    index("idx_diagnostic_report_jkn_synced").on(table.isJknSynced),
   ]
 );
 
