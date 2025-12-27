@@ -17,6 +17,7 @@ import {
   appointmentTypeEnum,
   queueStatusEnum,
   queuePriorityEnum,
+  BsonResource,
 } from "./core";
 import { organizations } from "./organization";
 import { users } from "./users";
@@ -44,11 +45,7 @@ export const appointments = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Appointment fields
     organizationId: uuid("organization_id")
@@ -82,6 +79,7 @@ export const appointments = pgTable(
     isVideoCall: boolean("is_video_call").default(false),
     isWalkIn: boolean("is_walk_in").default(false),
     isFollowUp: boolean("is_follow_up").default(false),
+    previousAppointmentId: uuid("previous_appointment_id"),
     checkedInAt: timestamp("checked_in_at"),
     checkedInBy: uuid("checked_in_by").references(() => users.id, {
       onDelete: "set null",
@@ -133,11 +131,7 @@ export const appointmentReminders = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Reminder fields
     appointmentId: uuid("appointment_id")
@@ -176,11 +170,7 @@ export const queues = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Queue fields
     organizationId: uuid("organization_id")
@@ -252,11 +242,7 @@ export const queueCallLogs = pgTable(
     deletedAt: timestamp("deleted_at"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Call log fields
     queueId: uuid("queue_id")
@@ -293,11 +279,7 @@ export const queueDisplayConfigs = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Display config fields
     organizationId: uuid("organization_id")
