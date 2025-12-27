@@ -22,15 +22,9 @@
 
 ## 🎯 Overview
 
-This system helps you transform informal product requirements into professional, AI-ready documentation. Choose your workflow:
+This system helps you transform informal product requirements into professional, AI-ready documentation.
 
-### **NEW: One-Step Process (Recommended)**
-```
-Raw Ideas → Complete Documentation (User Stories + Features + API Specs)
-Using: PROMPT-0-ideas-to-docs.md
-```
-
-### **Classic: Two-Step Process**
+### **Two-Step Process**
 ```
 Step 1: Free Text → Structured User Stories (PROMPT-1)
 Step 2: User Stories → Feature Specifications (PROMPT-2)
@@ -48,55 +42,25 @@ Step 2: User Stories → Feature Specifications (PROMPT-2)
 
 ## 🔄 Workflow
 
-### **NEW: One-Step Workflow (Recommended)**
-
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│   STEP 0: Drop your raw ideas in docs/00-raw-ideas/            │
+│   STEP 1: Drop your raw ideas in docs/00-raw-ideas/            │
 │   "I want users to register and login..."                      │
 └──────────────────┬──────────────────────────────────────────────┘
                    │
                    ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│   AI AGENT (PROMPT-0) - Single Pass Processing                 │
-│   ✓ Analyzes raw ideas                                         │
-│   ✓ Decides module organization                                │
-│   ✓ Generates user stories                                     │
-│   ✓ Generates feature specs with endpoint details              │
-│   ✓ Creates all index files                                    │
-│   ○ Optional: API specs (OpenAPI/TypeSpec) for later           │
-└──────────────────┬──────────────────────────────────────────────┘
-                   │
-                   ▼
-┌─────────────────────────────────────────────────────────────────┐
-│   OUTPUT: Complete Documentation                                │
-│   → docs/01-user-stories/[modules]/generated/US-*.md           │
-│   → docs/02-features/[modules]/FEATURE-*.md (with endpoints)   │
-│   → All README files                                            │
-│   ○ Optional: docs/03-api-spec/snippets/*.yaml (or .tsp)       │
-└──────────────────┬──────────────────────────────────────────────┘
-                   │
-                   ▼
-         ┌─────────────────┐
-         │  READY FOR       │
-         │  DEVELOPMENT     │
-         └──────────────────┘
-```
-
-### Classic Two-Step Workflow
-
-For more control over the process, you can still use the classic approach:
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│   STEP 1: PROMPT-1 (AI Agent)                                   │
+│   STEP 2: PROMPT-1 (AI Agent)                                   │
 │   Free Text → Structured User Stories                          │
+│   Output: docs/01-user-stories/[modules]/US-*.md               │
 └──────────────────┬──────────────────────────────────────────────┘
                    │
-                   ▼
+                   ▼ (Review & Approve)
+                   │
 ┌─────────────────────────────────────────────────────────────────┐
-│   STEP 2: PROMPT-2 (AI Agent)                                   │
+│   STEP 3: PROMPT-2 (AI Agent)                                   │
 │   User Stories → Feature Specifications                        │
+│   Output: docs/02-features/[modules]/FEATURE-*.md              │
 └──────────────────┬──────────────────────────────────────────────┘
                    │
                    ▼
@@ -121,12 +85,9 @@ project-name/
 │   │
 │   ├── 01-user-stories/
 │   │   ├── 01-authentication/
-│   │   │   ├── raw/
-│   │   │   │   └── 01-auth-requirements.txt      # Original free text
-│   │   │   └── generated/
-│   │   │       ├── US-1.1-user-registration.md   # Structured story
-│   │   │       ├── US-1.2-user-login.md
-│   │   │       └── US-1.3-password-reset.md
+│   │   │   ├── US-1.1-user-registration.md       # Structured story
+│   │   │   ├── US-1.2-user-login.md
+│   │   │   └── US-1.3-password-reset.md
 │   │   ├── 02-profile-management/
 │   │   │   └── ...
 │   │   └── README.md                              # Index of all stories
@@ -163,46 +124,16 @@ project-name/
 - Basic understanding of your product requirements
 - Text editor or IDE
 
-### **NEW: 3-Minute Setup (One-Step Workflow)**
+### **5-Minute Setup**
 
 1. **Create project structure**
 ```bash
-mkdir -p docs/{00-raw-ideas,01-user-stories,02-features,03-api-spec/snippets,templates}
-```
-
-2. **Write your brainstorming notes**
-```bash
-cat > docs/00-raw-ideas/my-feature.txt << 'EOF'
-I want users to register with email and password.
-They should get a verification email.
-After verifying, they can login.
-EOF
-```
-
-3. **Process with AI (PROMPT-0)**
-- Copy content from `PROMPT-0-ideas-to-docs.md`
-- Paste into your AI agent
-- Provide the raw idea file content
-- Get COMPLETE documentation in one go:
-  - User stories
-  - Feature specs
-  - OpenAPI specs
-  - All README files
-
-**Done!** Complete documentation ready for development.
-
----
-
-### Classic: 5-Minute Setup (Two-Step Workflow)
-
-1. **Create project structure**
-```bash
-mkdir -p docs/{01-user-stories,02-features,03-api-spec/snippets,templates}
+mkdir -p docs/{00-raw-ideas,01-user-stories,02-features,templates}
 ```
 
 2. **Write your first requirement**
 ```bash
-cat > docs/01-user-stories/01-authentication/raw/01-registration.txt << 'EOF'
+cat > docs/00-raw-ideas/01-registration.txt << 'EOF'
 I want users to be able to register with their email address. They should
 receive a verification email. Email must be unique. Password should be at
 least 8 characters.
@@ -213,13 +144,13 @@ EOF
 - Copy content from `PROMPT-1-raw-to-stories.md`
 - Paste into your AI agent
 - Provide your free-text requirement
-- Save the generated output
+- Review and save the generated user stories
 
 4. **Generate feature spec using PROMPT-2**
 - Copy content from `PROMPT-2-stories-to-features.md`
 - Paste into your AI agent
-- Provide the generated user story
-- Save the generated output
+- Provide the approved user story
+- Save the generated feature specification
 
 **Done!** You now have structured documentation.
 
@@ -231,10 +162,10 @@ EOF
 
 #### 1.1 Prepare Your Input
 
-Write requirements naturally in a text file:
+Write requirements naturally in the raw ideas folder:
 
 ```
-docs/01-user-stories/01-authentication/raw/01-auth-requirements.txt
+docs/00-raw-ideas/01-auth-requirements.txt
 ```
 
 **Good example:**
@@ -266,7 +197,7 @@ expires in 1 hour.
 ```
 Now, process the following input:
 
-**Source File**: docs/01-user-stories/01-authentication/raw/01-auth-requirements.txt
+**Source File**: docs/00-raw-ideas/01-auth-requirements.txt
 **Existing Structure**: None - new project
 **Free Text**:
 [paste your free text here]
@@ -296,7 +227,7 @@ Copy each generated file to your project:
 
 ```bash
 # Example
-cat > docs/01-user-stories/01-authentication/generated/US-1.1-user-registration.md << 'EOF'
+cat > docs/01-user-stories/01-authentication/US-1.1-user-registration.md << 'EOF'
 [paste generated content]
 EOF
 ```
@@ -322,7 +253,7 @@ Ensure you have approved user stories from Step 1.
 Now, process the following user stories:
 
 **Source Files**:
-- docs/01-user-stories/01-authentication/generated/US-1.1-user-registration.md
+- docs/01-user-stories/01-authentication/US-1.1-user-registration.md
 
 **Existing Feature Structure**: None - new project
 

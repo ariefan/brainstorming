@@ -100,12 +100,9 @@ If unclear, use generic names:
 ```
 docs/01-user-stories/
   ├── [NN-module-name]/
-  │   ├── raw/
-  │   │   └── [NN-descriptive-name].txt
-  │   └── generated/
-  │       ├── US-X.Y-story-name.md         # Single story
-  │       ├── US-X.Y-X.Z-workflow-name.md  # Multiple related stories
-  │       └── README.md                     # Index of stories in this module
+  │   ├── US-X.Y-story-name.md         # Single story
+  │   ├── US-X.Y-X.Z-workflow-name.md  # Multiple related stories
+  │   └── README.md                     # Index of stories in this module
 ```
 
 **ID Assignment:**
@@ -132,14 +129,14 @@ Before generating content, output a plan:
 
 ```yaml
 file_organization_plan:
-  source_file: "docs/01-user-stories/01-authentication/raw/01-auth-features.txt"
-  
+  source_file: "docs/00-raw-ideas/01-auth-features.txt"
+
   output_files:
-    - path: "docs/01-user-stories/01-authentication/generated/US-1.1-1.3-user-authentication.md"
+    - path: "docs/01-user-stories/01-authentication/US-1.1-1.3-user-authentication.md"
       stories: [US-1.1, US-1.2, US-1.3]
       reason: "Related user authentication flow, same role, sequential workflow"
-      
-    - path: "docs/01-user-stories/02-user-management/generated/US-2.1-admin-user-approval.md"
+
+    - path: "docs/01-user-stories/02-user-management/US-2.1-admin-user-approval.md"
       stories: [US-2.1]
       reason: "Different role (Admin), different module, independent workflow"
   
@@ -233,11 +230,11 @@ This document contains related user stories for the authentication workflow.
 
 ## Files
 
-- [`US-1.1-1.3-user-authentication.md`](./generated/US-1.1-1.3-user-authentication.md) - Complete authentication flow (US-1.1, US-1.2, US-1.3)
+- [`US-1.1-1.3-user-authentication.md`](./US-1.1-1.3-user-authentication.md) - Complete authentication flow (US-1.1, US-1.2, US-1.3)
 
-## Raw Sources
+## Source
 
-- [`01-auth-features.txt`](./raw/01-auth-features.txt) - Original requirements from Product Owner
+- Original idea: [`01-auth-features.txt`](../../00-raw-ideas/01-auth-features.txt) - Original requirements from Product Owner
 ```
 
 ### Project-Level README
@@ -334,7 +331,7 @@ Your complete output should be:
 
 ## File 1: US-1.1-1.3-user-authentication.md
 
-**Path**: `docs/01-user-stories/01-authentication/generated/US-1.1-1.3-user-authentication.md`
+**Path**: `docs/01-user-stories/01-authentication/US-1.1-1.3-user-authentication.md`
 
 ```markdown
 [... complete file content following USER-STORY-TEMPLATE.md ...]
@@ -344,7 +341,7 @@ Your complete output should be:
 
 ## File 2: US-2.1-admin-user-approval.md
 
-**Path**: `docs/01-user-stories/02-user-management/generated/US-2.1-admin-user-approval.md`
+**Path**: `docs/01-user-stories/02-user-management/US-2.1-admin-user-approval.md`
 
 ```markdown
 [... complete file content following USER-STORY-TEMPLATE.md ...]
@@ -441,8 +438,8 @@ At the end of output, provide shell commands:
 # Commands to create the generated structure
 
 # Create directories
-mkdir -p docs/01-user-stories/01-authentication/generated
-mkdir -p docs/01-user-stories/02-user-management/generated
+mkdir -p docs/01-user-stories/01-authentication
+mkdir -p docs/01-user-stories/02-user-management
 
 # Create files (content provided above)
 # User should copy-paste the content from the generated files section

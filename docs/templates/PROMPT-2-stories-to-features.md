@@ -87,7 +87,7 @@ docs/02-features/
 ```yaml
 file_organization_plan:
   source_stories:
-    - US-1.1: "docs/01-user-stories/01-authentication/generated/US-1.1-1.3-user-authentication.md"
+    - US-1.1: "docs/01-user-stories/01-authentication/US-1.1-1.3-user-authentication.md"
   
   output_files:
     - path: "docs/02-features/01-authentication/FEATURE-1-authentication.md"
@@ -214,9 +214,9 @@ Users can register, verify their email, login securely, and recover their accoun
 
 | Story ID | Title | Link |
 |----------|-------|------|
-| US-1.1 | User Registration | [View](../../01-user-stories/01-authentication/generated/US-1.1-1.3-user-authentication.md#us-11-user-registration) |
-| US-1.2 | User Login | [View](../../01-user-stories/01-authentication/generated/US-1.1-1.3-user-authentication.md#us-12-user-login) |
-| US-1.3 | Password Reset | [View](../../01-user-stories/01-authentication/generated/US-1.1-1.3-user-authentication.md#us-13-password-reset) |
+| US-1.1 | User Registration | [View](../../01-user-stories/01-authentication/US-1.1-1.3-user-authentication.md#us-11-user-registration) |
+| US-1.2 | User Login | [View](../../01-user-stories/01-authentication/US-1.1-1.3-user-authentication.md#us-12-user-login) |
+| US-1.3 | Password Reset | [View](../../01-user-stories/01-authentication/US-1.1-1.3-user-authentication.md#us-13-password-reset) |
 
 ---
 
@@ -525,7 +525,7 @@ components:
 
 ## Related User Stories
 
-- [US-1.1-1.3: User Authentication](../../01-user-stories/01-authentication/generated/US-1.1-1.3-user-authentication.md)
+- [US-1.1-1.3: User Authentication](../../01-user-stories/01-authentication/US-1.1-1.3-user-authentication.md)
 ```
 
 ### Project-Level Features Index
@@ -748,7 +748,7 @@ Before outputting, verify:
 Now, process the following user stories:
 
 **Source Files**:
-- docs/01-user-stories/01-authentication/generated/US-1.1-1.3-user-authentication.md
+- docs/01-user-stories/01-authentication/US-1.1-1.3-user-authentication.md
 
 **Existing Feature Structure**: None - new project
 

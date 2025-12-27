@@ -1,0 +1,163 @@
+# Clinical Application - Production Requirements
+
+> FHIR R4 compliant, integrated with Satusehat and BPJS Kesehatan
+> Supports multi-specialty polyclinic (General, Dental, Midwifery/KIA)
+
+## Patient Management
+- Patient registration (new and returning patients)
+- Patient search by NIK, name, MRN, BPJS number
+- Patient medical record (rekam medis elektronik)
+- Patient history, allergies, and chronic conditions
+- Family member linking
+- Satusehat Patient resource with IHS ID
+
+## Practitioners & Polyclinics
+- Practitioner types: Doctor, Dentist, Midwife (Bidan)
+- Polyclinic setup: Poli Umum, Poli Gigi, Poli KIA/Kebidanan
+- Practitioner schedule per polyclinic
+- Practitioner credentials (SIP/STR) tracking
+- Satusehat Practitioner and PractitionerRole resources
+
+## Appointment & Queue System
+- Online appointment booking by polyclinic
+- Walk-in registration with auto queue number
+- Queue display system (TV/monitor per polyclinic)
+- Queue calling with audio announcement (text-to-speech)
+- Real-time queue status: waiting → called → serving → done
+- Queue transfer between polyclinics
+- Priority queue: elderly (>60), disabled, emergency
+- Estimated wait time based on average service time
+- SMS/WhatsApp appointment reminder
+
+## Medical Services - Poli Umum (General)
+- Vital signs recording by nurse (before consultation)
+- Doctor consultation with SOAP notes
+- Diagnosis with ICD-10 coding (searchable)
+- Prescription (e-Resep) with drug interaction check
+- Lab order with specimen tracking
+- Referral letter (internal/external, BPJS rujukan)
+- Medical certificates (SKS, SKD)
+- FHIR: Encounter, Condition, Observation, MedicationRequest, ServiceRequest
+
+## Medical Services - Poli Gigi (Dental)
+- Dental chart (odontogram) visual interface
+- Dental procedures with ICD-9-CM coding
+- Dental-specific diagnosis codes
+- Treatment plan with multiple visits
+- Before/after photo documentation
+- Dental material usage tracking
+
+## Medical Services - Poli KIA/Kebidanan (Midwifery)
+- Antenatal Care (ANC) with standard K1-K4 forms
+- Pregnancy history: G_P_A_ (Gravida, Para, Abortus)
+- HPHT and HPL calculation
+- Fundal height and fetal heart rate tracking
+- Partograph for labor monitoring
+- Postnatal Care (PNC) visits
+- Family Planning (KB) services and counseling
+- Immunization records (TT for mother, infant immunization)
+- Child growth monitoring with WHO charts
+- Buku KIA integration
+
+## Inpatient (Rawat Inap)
+- Room/bed management with real-time availability
+- Room classes: VVIP, VIP, Kelas 1, 2, 3, ICU
+- Admission workflow from poli or IGD
+- Discharge planning with checklist
+- Daily SOAP notes by attending doctor
+- Nursing assessments and care plans
+- Medication Administration Record (MAR)
+- Fluid balance chart
+- Length of stay tracking with BPJS limits
+- FHIR Encounter with hospitalization class
+
+## Pharmacy
+- Medicine master with KFA codes (Katalog Farmasi Alkes)
+- Inventory with batch number and expiry date
+- Prescription queue from all polyclinics
+- Dispensing workflow with pharmacist verification
+- Label printing with signa
+- Stock opname and adjustment
+- Minimum stock alerts
+- Near-expiry alerts (90/60/30 days)
+- Narcotic/psychotropic special handling
+- FHIR Medication, MedicationDispense resources
+
+## Laboratory
+- Test catalog with LOINC codes
+- Lab order queue from polyclinics
+- Specimen collection and barcoding
+- Result entry with normal ranges
+- Critical value notification
+- Result authorization workflow
+- Result printing
+- FHIR ServiceRequest, DiagnosticReport, Observation
+
+## Billing & Payment
+- Service tariff master (general vs BPJS)
+- Auto charge capture from encounters
+- Invoice generation with itemization
+- Multiple payment methods: cash, debit, credit, QRIS, transfer
+- Split payment support
+- BPJS INA-CBG tariff lookup
+- Deposit and refund handling
+- Receipt printing
+- Daily cash closing/reconciliation
+
+## Satusehat Integration (FHIR R4)
+Required resources workflow:
+1. Prerequisites: Organization, Location, Practitioner (sync once)
+2. Patient: Create/Get IHS ID using NIK
+3. Encounter: Create when visit starts, update status
+4. Condition: Push diagnoses with ICD-10
+5. Observation: Push vital signs, lab results
+6. Procedure: Push procedures with ICD-9-CM
+7. MedicationRequest: Push prescriptions
+8. MedicationDispense: Push dispensing records
+9. ServiceRequest + DiagnosticReport: Push lab orders/results
+10. Composition: Resume medis bundle
+
+Authentication: OAuth2 client credentials
+Consent: Patient consent for data sharing
+
+## BPJS Kesehatan Integration
+### PCare (for FKTP - Puskesmas level)
+- Pendaftaran peserta
+- Kunjungan rawat jalan
+- Tindakan dan diagnosis
+- Rujukan FKTP
+
+### VClaim (for FKRTL - RS/Klinik level)
+- Cek kepesertaan (eligibility)
+- SEP creation (outpatient/inpatient)
+- Rujukan management
+- Data kunjungan
+- Monitoring klaim
+
+### E-Klaim (for inpatient)
+- INA-CBG grouping
+- Claim bundle submission
+- Claim verification status
+
+### Apotek (for pharmacy)
+- Obat PRB
+- Resep BPJS
+
+## Reporting & Analytics
+- Daily visit report by polyclinic and practitioner
+- 10 besar penyakit (top 10 diseases)
+- Revenue report by category and payment type
+- BPJS claim report with status breakdown
+- Medicine usage and inventory turnover
+- Queue performance (avg wait time, service time)
+- KIA indicators (K1, K4 coverage, immunization)
+- Monthly summary for Dinas Kesehatan
+
+## System & Security
+- Role-based access control (RBAC)
+- Audit trail for all clinical data
+- Session management with timeout
+- Data encryption at rest and in transit
+- Backup scheduling
+- Master data: ICD-10, ICD-9-CM, LOINC, KFA, Polyclinics
+- Multi-branch support (if applicable)
