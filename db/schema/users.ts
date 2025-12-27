@@ -10,7 +10,16 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-import { roleEnum, genderEnum, userStatusEnum, BsonResource } from "./core";
+import {
+  roleEnum,
+  genderEnum,
+  userStatusEnum,
+  BsonResource,
+  fullFields,
+  baseFields,
+  bsonFields,
+  softDeleteFields,
+} from "./core";
 import { organizations } from "./organization";
 
 // ============================================================================
@@ -24,16 +33,7 @@ import { organizations } from "./organization";
 export const users = pgTable(
   "users",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    createdBy: uuid("created_by"),
-    updatedBy: uuid("updated_by"),
-    deletedAt: timestamp("deleted_at"),
-    deletedBy: uuid("deleted_by"),
-
-    // BSON resource storage
-    resource: jsonb("resource").$type<BsonResource>(),
+    ...fullFields,
 
     // User fields
     organizationId: uuid("organization_id")
@@ -99,16 +99,7 @@ export const users = pgTable(
 export const userInvitations = pgTable(
   "user_invitations",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    createdBy: uuid("created_by").notNull(),
-    updatedBy: uuid("updated_by"),
-    deletedAt: timestamp("deleted_at"),
-    deletedBy: uuid("deleted_by"),
-
-    // BSON resource storage
-    resource: jsonb("resource").$type<BsonResource>(),
+    ...fullFields,
 
     // Invitation fields
     organizationId: uuid("organization_id")
@@ -146,13 +137,9 @@ export const userInvitations = pgTable(
 export const userSessions = pgTable(
   "user_sessions",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    deletedAt: timestamp("deleted_at"),
-
-    // BSON resource storage
-    resource: jsonb("resource").$type<BsonResource>(),
+    ...baseFields,
+    ...bsonFields,
+    ...softDeleteFields,
 
     // Session fields
     userId: uuid("user_id")
@@ -200,16 +187,7 @@ export const userSessions = pgTable(
 export const userBranches = pgTable(
   "user_branches",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    createdBy: uuid("created_by"),
-    updatedBy: uuid("updated_by"),
-    deletedAt: timestamp("deleted_at"),
-    deletedBy: uuid("deleted_by"),
-
-    // BSON resource storage
-    resource: jsonb("resource").$type<BsonResource>(),
+    ...fullFields,
 
     // User-branch assignment fields
     userId: uuid("user_id")
@@ -242,11 +220,8 @@ export const userBranches = pgTable(
 export const auditLogs = pgTable(
   "audit_logs",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-
-    // BSON resource storage
-    resource: jsonb("resource").$type<BsonResource>(),
+    ...baseFields,
+    ...bsonFields,
 
     // Audit fields
     organizationId: uuid("organization_id").references(() => organizations.id, {

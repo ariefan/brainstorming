@@ -6,7 +6,6 @@ import {
   boolean,
   timestamp,
   date,
-  time,
   integer,
   jsonb,
   index,
@@ -19,231 +18,126 @@ import {
   reportFormatEnum,
   reportGenerationStatusEnum,
   BsonResource,
+  fullFields,
 } from "./core";
 import { organizations } from "./organization";
 import { users } from "./users";
-import { branches } from "./organization";
-import { polyclinics } from "./practitioners";
 
 // ============================================================================
-// REPORTING & ANALYTICS TABLES
+// REPORTING TABLES
 // ============================================================================
 
 /**
- * Report definitions table
- * Stores report metadata and configuration
+ * Report templates table
+ * Represents report templates
  */
-export const reportDefinitions = pgTable(
-  "report_definitions",
+export const reportTemplates = pgTable(
+  "report_templates",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    createdBy: uuid("created_by"),
-    updatedBy: uuid("updated_by"),
-    deletedAt: timestamp("deleted_at"),
-    deletedBy: uuid("deleted_by"),
+    ...fullFields,
 
-    // BSON resource storage
-    resource: jsonb("resource").$type<BsonResource>(),
-
-    // Report definition fields
-    reportCode: varchar("report_code", { length: 50 }).notNull().unique(),
-    reportName: varchar("report_name", { length: 255 }).notNull(),
-    reportNameId: varchar("report_name_id", { length: 255 }), // Indonesian name
-    reportCategory: reportCategoryEnum("report_category").notNull(),
+    // Template fields
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    branchId: uuid("branch_id").references(() => organizations.id, {
+      onDelete: "set null",
+    }),
+    name: varchar("name", { length: 255 }).notNull(),
+    nameId: varchar("name_id", { length: 255 }), // Indonesian name
+    category: reportCategoryEnum("category").notNull(),
     description: text("description"),
-    frequency: reportFrequencyEnum("frequency").notNull(),
-    autoGenerate: boolean("auto_generate").default(false),
-    generateDay: integer("generate_day"), // 1-7 for weekly, 1-31 for monthly
-    parameters: jsonb("parameters").$type<Record<string, any>>(), // Configurable parameters schema
-    outputFormats: jsonb("output_formats").$type<string[]>(), // Array of supported formats
-    templatePath: varchar("template_path", { length: 500 }),
+    query: text("query").notNull(),
+    parameters: jsonb("parameters").$type<Record<string, any>>(),
     isActive: boolean("is_active").default(true),
   },
   (table) => [
-    uniqueIndex("idx_report_def_code").on(table.reportCode),
-    index("idx_report_def_category").on(table.reportCategory),
-    index("idx_report_def_active").on(table.isActive),
-  ]
-);
-
-/**
- * Report generations table
- * Tracks report generation jobs
- */
-export const reportGenerations = pgTable(
-  "report_generations",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    createdBy: uuid("created_by"),
-    updatedBy: uuid("updated_by"),
-    deletedAt: timestamp("deleted_at"),
-    deletedBy: uuid("deleted_by"),
-
-    // BSON resource storage
-    resource: jsonb("resource").$type<BsonResource>(),
-
-    // Report generation fields
-    reportDefinitionId: uuid("report_definition_id")
-      .notNull()
-      .references(() => reportDefinitions.id, { onDelete: "cascade" }),
-    parameters: jsonb("parameters").$type<Record<string, any>>(),
-    periodStart: date("period_start").notNull(),
-    periodEnd: date("period_end").notNull(),
-    requestedAt: timestamp("requested_at").notNull(),
-    requestedBy: uuid("requested_by")
-      .notNull()
-      .references(() => users.id, { onDelete: "set null" }),
-    generatedAt: timestamp("generated_at"),
-    generationStatus: reportGenerationStatusEnum("generation_status")
-      .notNull()
-      .default("pending"),
-    errorMessage: text("error_message"),
-    fileUrl: varchar("file_url", { length: 500 }),
-    fileFormat: reportFormatEnum("file_format"),
-    fileSizeBytes: integer("file_size_bytes"),
-    expiresAt: timestamp("expires_at"),
-  },
-  (table) => [
-    index("idx_report_gen_def").on(table.reportDefinitionId),
-    index("idx_report_gen_status").on(table.generationStatus),
-    index("idx_report_gen_date").on(table.requestedAt),
-    index("idx_report_gen_expires").on(table.expiresAt),
+    index("idx_report_template_org_id").on(table.organizationId),
+    index("idx_report_template_branch_id").on(table.branchId),
+    index("idx_report_template_category").on(table.category),
+    index("idx_report_template_active").on(table.isActive),
   ]
 );
 
 /**
  * Report schedules table
- * Stores scheduled report configurations
+ * Represents report schedules
  */
 export const reportSchedules = pgTable(
   "report_schedules",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    createdBy: uuid("created_by"),
-    updatedBy: uuid("updated_by"),
-    deletedAt: timestamp("deleted_at"),
-    deletedBy: uuid("deleted_by"),
+    ...fullFields,
 
-    // BSON resource storage
-    resource: jsonb("resource").$type<BsonResource>(),
-
-    // Report schedule fields
-    reportDefinitionId: uuid("report_definition_id")
+    // Schedule fields
+    organizationId: uuid("organization_id")
       .notNull()
-      .references(() => reportDefinitions.id, { onDelete: "cascade" }),
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    branchId: uuid("branch_id").references(() => organizations.id, {
+      onDelete: "set null",
+    }),
+    templateId: uuid("template_id")
+      .notNull()
+      .references(() => reportTemplates.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 255 }).notNull(),
     frequency: reportFrequencyEnum("frequency").notNull(),
-    scheduleTime: time("schedule_time").notNull(),
-    scheduleDay: integer("schedule_day"), // 1-7 for weekly, 1-31 for monthly
-    parameters: jsonb("parameters").$type<Record<string, any>>(),
-    outputFormat: reportFormatEnum("output_format").notNull().default("pdf"),
-    autoEmail: boolean("auto_email").default(false),
-    emailRecipients: jsonb("email_recipients").$type<string[]>(), // Array of email addresses
+    dayOfWeek: integer("day_of_week"),
+    dayOfMonth: integer("day_of_month"),
+    time: varchar("time", { length: 10 }),
+    format: reportFormatEnum("format").notNull(),
+    recipients: jsonb("recipients").$type<string[]>(),
     isActive: boolean("is_active").default(true),
-    lastRunAt: timestamp("last_run_at"),
-    nextRunAt: timestamp("next_run_at").notNull(),
-    createdByUser: uuid("created_by")
+  },
+  (table) => [
+    index("idx_report_schedule_org_id").on(table.organizationId),
+    index("idx_report_schedule_branch_id").on(table.branchId),
+    index("idx_report_schedule_template_id").on(table.templateId),
+    index("idx_report_schedule_frequency").on(table.frequency),
+    index("idx_report_schedule_active").on(table.isActive),
+  ]
+);
+
+/**
+ * Report generations table
+ * Represents report generations
+ */
+export const reportGenerations = pgTable(
+  "report_generations",
+  {
+    ...fullFields,
+
+    // Generation fields
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    branchId: uuid("branch_id").references(() => organizations.id, {
+      onDelete: "set null",
+    }),
+    templateId: uuid("template_id")
+      .notNull()
+      .references(() => reportTemplates.id, { onDelete: "cascade" }),
+    scheduleId: uuid("schedule_id").references(() => reportSchedules.id, {
+      onDelete: "set null",
+    }),
+    generatedBy: uuid("generated_by")
       .notNull()
       .references(() => users.id, { onDelete: "set null" }),
+    reportDate: date("report_date").notNull(),
+    startDate: date("start_date"),
+    endDate: date("end_date"),
+    format: reportFormatEnum("format").notNull(),
+    filePath: varchar("file_path", { length: 500 }),
+    fileSize: integer("file_size"),
+    status: reportGenerationStatusEnum("status").default("pending"),
+    errorMessage: text("error_message"),
   },
   (table) => [
-    index("idx_schedule_def").on(table.reportDefinitionId),
-    index("idx_schedule_next").on(table.nextRunAt, table.isActive),
-    index("idx_schedule_active").on(table.isActive),
-  ]
-);
-
-/**
- * Disease statistics cache table
- * Caches pre-calculated disease statistics
- */
-export const diseaseStatisticsCache = pgTable(
-  "disease_statistics_cache",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    createdBy: uuid("created_by"),
-    updatedBy: uuid("updated_by"),
-    deletedAt: timestamp("deleted_at"),
-    deletedBy: uuid("deleted_by"),
-
-    // BSON resource storage
-    resource: jsonb("resource").$type<BsonResource>(),
-
-    // Disease statistics fields
-    periodType: varchar("period_type", { length: 20 }).notNull(), // daily, weekly, monthly, yearly
-    periodDate: date("period_date").notNull(),
-    polyclinicId: uuid("polyclinic_id").references(() => polyclinics.id, {
-      onDelete: "set null",
-    }),
-    icd10Code: varchar("icd10_code", { length: 10 }).notNull(),
-    diseaseName: varchar("disease_name", { length: 255 }).notNull(),
-    totalCases: integer("total_cases").notNull().default(0),
-    newCases: integer("new_cases").notNull().default(0),
-    returningCases: integer("returning_cases").notNull().default(0),
-    maleCount: integer("male_count").notNull().default(0),
-    femaleCount: integer("female_count").notNull().default(0),
-    age0_5: integer("age_0_5").notNull().default(0),
-    age6_17: integer("age_6_17").notNull().default(0),
-    age18_59: integer("age_18_59").notNull().default(0),
-    age60Plus: integer("age_60_plus").notNull().default(0),
-    calculatedAt: timestamp("calculated_at").notNull(),
-    branchId: uuid("branch_id").references(() => branches.id, {
-      onDelete: "set null",
-    }),
-  },
-  (table) => [
-    index("idx_disease_stats_period").on(table.periodType, table.periodDate),
-    index("idx_disease_stats_icd").on(table.icd10Code),
-    index("idx_disease_stats_poli").on(table.polyclinicId),
-    index("idx_disease_stats_branch").on(table.branchId),
-    index("idx_disease_stats_calc").on(table.calculatedAt),
-  ]
-);
-
-/**
- * KIA indicators cache table
- * Caches pre-calculated KIA (maternal and child health) indicators
- */
-export const kiaIndicatorsCache = pgTable(
-  "kia_indicators_cache",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    createdBy: uuid("created_by"),
-    updatedBy: uuid("updated_by"),
-    deletedAt: timestamp("deleted_at"),
-    deletedBy: uuid("deleted_by"),
-
-    // BSON resource storage
-    resource: jsonb("resource").$type<BsonResource>(),
-
-    // KIA indicators fields
-    periodMonth: integer("period_month").notNull(),
-    periodYear: integer("period_year").notNull(),
-    indicatorType: varchar("indicator_type", { length: 50 }).notNull(), // anc, pnc, immunization, child_growth
-    indicatorName: varchar("indicator_name", { length: 100 }).notNull(),
-    targetValue: integer("target_value"),
-    achievedValue: integer("achieved_value").notNull(),
-    coveragePercent: varchar("coverage_percent", { length: 10 }),
-    additionalData: jsonb("additional_data").$type<Record<string, any>>(),
-    calculatedAt: timestamp("calculated_at").notNull(),
-    branchId: uuid("branch_id").references(() => branches.id, {
-      onDelete: "set null",
-    }),
-  },
-  (table) => [
-    index("idx_kia_period").on(table.periodMonth, table.periodYear),
-    index("idx_kia_type").on(table.indicatorType),
-    index("idx_kia_branch").on(table.branchId),
-    index("idx_kia_calc").on(table.calculatedAt),
+    index("idx_report_generation_org_id").on(table.organizationId),
+    index("idx_report_generation_branch_id").on(table.branchId),
+    index("idx_report_generation_template_id").on(table.templateId),
+    index("idx_report_generation_schedule_id").on(table.scheduleId),
+    index("idx_report_generation_generated_by").on(table.generatedBy),
+    index("idx_report_generation_report_date").on(table.reportDate),
+    index("idx_report_generation_status").on(table.status),
   ]
 );
 
@@ -251,62 +145,39 @@ export const kiaIndicatorsCache = pgTable(
 // RELATIONS
 // ============================================================================
 
-export const reportDefinitionsRelations = relations(
-  reportDefinitions,
+export const reportTemplatesRelations = relations(
+  reportTemplates,
   ({ many }) => ({
-    generations: many(reportGenerations),
     schedules: many(reportSchedules),
+    generations: many(reportGenerations),
+  })
+);
+
+export const reportSchedulesRelations = relations(
+  reportSchedules,
+  ({ one, many }) => ({
+    template: one(reportTemplates, {
+      fields: [reportSchedules.templateId],
+      references: [reportTemplates.id],
+    }),
+    generations: many(reportGenerations),
   })
 );
 
 export const reportGenerationsRelations = relations(
   reportGenerations,
   ({ one }) => ({
-    reportDefinition: one(reportDefinitions, {
-      fields: [reportGenerations.reportDefinitionId],
-      references: [reportDefinitions.id],
+    template: one(reportTemplates, {
+      fields: [reportGenerations.templateId],
+      references: [reportTemplates.id],
     }),
-    requestedByUser: one(users, {
-      fields: [reportGenerations.requestedBy],
+    schedule: one(reportSchedules, {
+      fields: [reportGenerations.scheduleId],
+      references: [reportSchedules.id],
+    }),
+    generatedBy: one(users, {
+      fields: [reportGenerations.generatedBy],
       references: [users.id],
-    }),
-  })
-);
-
-export const reportSchedulesRelations = relations(
-  reportSchedules,
-  ({ one }) => ({
-    reportDefinition: one(reportDefinitions, {
-      fields: [reportSchedules.reportDefinitionId],
-      references: [reportDefinitions.id],
-    }),
-    createdByUser: one(users, {
-      fields: [reportSchedules.createdByUser],
-      references: [users.id],
-    }),
-  })
-);
-
-export const diseaseStatisticsCacheRelations = relations(
-  diseaseStatisticsCache,
-  ({ one }) => ({
-    polyclinic: one(polyclinics, {
-      fields: [diseaseStatisticsCache.polyclinicId],
-      references: [polyclinics.id],
-    }),
-    branch: one(branches, {
-      fields: [diseaseStatisticsCache.branchId],
-      references: [branches.id],
-    }),
-  })
-);
-
-export const kiaIndicatorsCacheRelations = relations(
-  kiaIndicatorsCache,
-  ({ one }) => ({
-    branch: one(branches, {
-      fields: [kiaIndicatorsCache.branchId],
-      references: [branches.id],
     }),
   })
 );

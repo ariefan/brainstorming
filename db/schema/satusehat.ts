@@ -23,320 +23,285 @@ import {
   satusehatLookupStatusEnum,
   satusehatVerificationMethodEnum,
   BsonResource,
+  fullFields,
+  baseFields,
+  bsonFields,
+  softDeleteFields,
 } from "./core";
 import { organizations } from "./organization";
-import { polyclinics } from "./practitioners";
-import { practitioners } from "./practitioners";
-import { patients } from "./patients";
 import { users } from "./users";
-import { encounters } from "./medical";
+import { patients } from "./patients";
+import { practitioners } from "./practitioners";
 
 // ============================================================================
-// SATUSEHAT FHIR R4 INTEGRATION TABLES
+// SATUSEHAT INTEGRATION TABLES
 // ============================================================================
 
 /**
- * SatuSehat configurations table
- * Stores OAuth2 credentials and configuration for SatuSehat integration
+ * SatuSehat configs table
+ * Represents SatuSehat configuration
  */
 export const satusehatConfigs = pgTable(
   "satusehat_configs",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    createdBy: uuid("created_by"),
-    updatedBy: uuid("updated_by"),
-    deletedAt: timestamp("deleted_at"),
-    deletedBy: uuid("deleted_by"),
+    ...fullFields,
 
-    // BSON resource storage
-    resource: jsonb("resource").$type<BsonResource>(),
-
-    // Configuration fields
+    // Config fields
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    clientId: varchar("client_id", { length: 255 }).notNull(), // Encrypted at application level
-    clientSecret: varchar("client_secret", { length: 255 }).notNull(), // Encrypted at application level
-    environment: satusehatEnvironmentEnum("environment")
-      .notNull()
-      .default("sandbox"),
-    orgSatusehatId: varchar("org_satusehat_id", { length: 100 }).notNull(),
-    orgName: varchar("org_name", { length: 255 }),
-    currentAccessToken: text("current_access_token"), // Encrypted at application level
-    tokenExpiresAt: timestamp("token_expires_at"),
-    lastTokenRefresh: timestamp("last_token_refresh"),
+    branchId: uuid("branch_id").references(() => organizations.id, {
+      onDelete: "set null",
+    }),
+    environment: satusehatEnvironmentEnum("environment").notNull(),
+    clientId: varchar("client_id", { length: 100 }).notNull(),
+    clientSecret: varchar("client_secret", { length: 255 }).notNull(),
+    authUrl: varchar("auth_url", { length: 500 }).notNull(),
+    apiUrl: varchar("api_url", { length: 500 }).notNull(),
     isActive: boolean("is_active").default(true),
-    lastSyncAt: timestamp("last_sync_at"),
-    lastError: text("last_error"),
+    notes: text("notes"),
   },
   (table) => [
-    index("idx_satusehat_config_org").on(table.organizationId),
-    uniqueIndex("idx_satusehat_config_org_unique").on(table.organizationId),
+    index("idx_satusehat_config_org_id").on(table.organizationId),
+    index("idx_satusehat_config_branch_id").on(table.branchId),
+    index("idx_satusehat_config_active").on(table.isActive),
   ]
 );
 
 /**
  * SatuSehat locations table
- * Maps polyclinics to SatuSehat Location resources
+ * Represents SatuSehat location mappings
  */
 export const satusehatLocations = pgTable(
   "satusehat_locations",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    createdBy: uuid("created_by"),
-    updatedBy: uuid("updated_by"),
-    deletedAt: timestamp("deleted_at"),
-    deletedBy: uuid("deleted_by"),
-
-    // BSON resource storage
-    resource: jsonb("resource").$type<BsonResource>(),
+    ...fullFields,
 
     // Location mapping fields
-    polyclinicId: uuid("polyclinic_id")
+    organizationId: uuid("organization_id")
       .notNull()
-      .references(() => polyclinics.id, { onDelete: "cascade" }),
-    satusehatLocationId: varchar("satusehat_location_id", {
-      length: 100,
-    }).notNull(),
-    locationName: varchar("location_name", { length: 255 }).notNull(),
-    locationType: varchar("location_type", { length: 50 }),
-    syncedAt: timestamp("synced_at").notNull(),
-    status: satusehatSyncStatusEnum("status").notNull().default("completed"),
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    branchId: uuid("branch_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    satusehatLocationId: varchar("satusehat_location_id", { length: 100 })
+      .notNull()
+      .unique(),
+    satusehatLocationName: varchar("satusehat_location_name", {
+      length: 255,
+    }),
+    localLocationId: uuid("local_location_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    lastSyncedAt: timestamp("last_synced_at"),
+    notes: text("notes"),
   },
   (table) => [
-    index("idx_satusehat_location_poli").on(table.polyclinicId),
-    uniqueIndex("idx_satusehat_location_poli_unique").on(table.polyclinicId),
-    index("idx_satusehat_location_id").on(table.satusehatLocationId),
+    index("idx_satusehat_location_org_id").on(table.organizationId),
+    index("idx_satusehat_location_branch_id").on(table.branchId),
+    uniqueIndex("idx_satusehat_location_satusehat_id").on(
+      table.satusehatLocationId
+    ),
+    index("idx_satusehat_location_local_id").on(table.localLocationId),
   ]
 );
 
 /**
  * SatuSehat practitioners table
- * Maps practitioners to SatuSehat Practitioner resources
+ * Represents SatuSehat practitioner mappings
  */
 export const satusehatPractitioners = pgTable(
   "satusehat_practitioners",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    createdBy: uuid("created_by"),
-    updatedBy: uuid("updated_by"),
-    deletedAt: timestamp("deleted_at"),
-    deletedBy: uuid("deleted_by"),
-
-    // BSON resource storage
-    resource: jsonb("resource").$type<BsonResource>(),
+    ...fullFields,
 
     // Practitioner mapping fields
-    practitionerId: uuid("practitioner_id")
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    branchId: uuid("branch_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    satusehatIhsId: varchar("satusehat_ihs_id", { length: 100 })
+      .notNull()
+      .unique(),
+    satusehatPractitionerName: varchar("satusehat_practitioner_name", {
+      length: 255,
+    }),
+    localPractitionerId: uuid("local_practitioner_id")
       .notNull()
       .references(() => practitioners.id, { onDelete: "cascade" }),
-    ihsNumber: varchar("ihs_number", { length: 100 }).notNull(), // SatuSehat Practitioner ID
-    nik: varchar("nik", { length: 16 }).notNull(),
-    practitionerName: varchar("practitioner_name", { length: 255 }).notNull(),
-    verifiedAt: timestamp("verified_at").notNull(),
-    verificationMethod: satusehatVerificationMethodEnum(
-      "verification_method"
-    ).notNull(),
-    status: satusehatSyncStatusEnum("status").notNull().default("completed"),
+    lastSyncedAt: timestamp("last_synced_at"),
+    notes: text("notes"),
   },
   (table) => [
-    index("idx_satusehat_pract_local").on(table.practitionerId),
-    uniqueIndex("idx_satusehat_pract_local_unique").on(table.practitionerId),
-    index("idx_satusehat_pract_ihs").on(table.ihsNumber),
-    index("idx_satusehat_pract_nik").on(table.nik),
+    index("idx_satusehat_practitioner_org_id").on(table.organizationId),
+    index("idx_satusehat_practitioner_branch_id").on(table.branchId),
+    uniqueIndex("idx_satusehat_practitioner_ihs_id").on(table.satusehatIhsId),
+    index("idx_satusehat_practitioner_local_id").on(table.localPractitionerId),
   ]
 );
 
 /**
  * Patient IHS lookups table
- * Tracks patient IHS lookups from SatuSehat
+ * Represents patient IHS lookup cache
  */
 export const patientIhsLookups = pgTable(
   "patient_ihs_lookups",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    createdBy: uuid("created_by"),
-    updatedBy: uuid("updated_by"),
-    deletedAt: timestamp("deleted_at"),
-    deletedBy: uuid("deleted_by"),
+    ...fullFields,
 
-    // BSON resource storage
-    resource: jsonb("resource").$type<BsonResource>(),
-
-    // Patient IHS lookup fields
+    // Lookup fields
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    branchId: uuid("branch_id").references(() => organizations.id, {
+      onDelete: "set null",
+    }),
     patientId: uuid("patient_id")
       .notNull()
       .references(() => patients.id, { onDelete: "cascade" }),
     nik: varchar("nik", { length: 16 }).notNull(),
-    lookupStatus: satusehatLookupStatusEnum("lookup_status").notNull(),
-    ihsPatientId: varchar("ihs_patient_id", { length: 100 }),
-    ihsPatientData: jsonb("ihs_patient_data").$type<{
-      name?: string;
-      gender?: string;
-      birthDate?: string;
-      address?: string;
-    }>(),
-    registrationRequired: boolean("registration_required").default(false),
-    registrationInstructions: text("registration_instructions"),
-    searchedAt: timestamp("searched_at").notNull(),
-    searchedBy: uuid("searched_by").references(() => users.id, {
+    satusehatIhsId: varchar("satusehat_ihs_id", { length: 100 }),
+    satusehatPatientId: uuid("satusehat_patient_id"),
+    status: satusehatLookupStatusEnum("status").default("not_found"),
+    verificationMethod: satusehatVerificationMethodEnum(
+      "verification_method"
+    ).notNull(),
+    verifiedAt: timestamp("verified_at"),
+    verifiedBy: uuid("verified_by").references(() => users.id, {
       onDelete: "set null",
     }),
+    lookupAttempts: integer("lookup_attempts").default(0),
+    lastLookupAt: timestamp("last_lookup_at"),
+    notes: text("notes"),
   },
   (table) => [
-    index("idx_patient_ihs_patient").on(table.patientId),
-    index("idx_patient_ihs_nik").on(table.nik),
-    index("idx_patient_ihs_status").on(table.lookupStatus),
+    index("idx_patient_ihs_lookup_org_id").on(table.organizationId),
+    index("idx_patient_ihs_lookup_branch_id").on(table.branchId),
+    index("idx_patient_ihs_lookup_patient_id").on(table.patientId),
+    index("idx_patient_ihs_lookup_nik").on(table.nik),
+    index("idx_patient_ihs_lookup_status").on(table.status),
   ]
 );
 
 /**
  * SatuSehat sync queue table
- * Queue for syncing resources to SatuSehat
+ * Represents SatuSehat synchronization queue
  */
 export const satusehatSyncQueue = pgTable(
   "satusehat_sync_queue",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    createdBy: uuid("created_by"),
-    updatedBy: uuid("updated_by"),
-    deletedAt: timestamp("deleted_at"),
-    deletedBy: uuid("deleted_by"),
-
-    // BSON resource storage
-    resource: jsonb("resource").$type<BsonResource>(),
+    ...fullFields,
 
     // Sync queue fields
-    resourceType: satusehatResourceTypeEnum("resource_type").notNull(),
-    resourceId: uuid("resource_id").notNull(),
-    operation: satusehatOperationEnum("operation").notNull(),
-    fhirResource: jsonb("fhir_resource").$type<Record<string, any>>(), // FHIR resource payload
-    dependsOn: jsonb("depends_on").$type<string[]>(), // Array of queue IDs that must complete first
-    encounterId: uuid("encounter_id").references(() => encounters.id, {
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    branchId: uuid("branch_id").references(() => organizations.id, {
       onDelete: "set null",
-    }), // Group by encounter
-    status: satusehatSyncStatusEnum("status").notNull().default("pending"),
-    priority: integer("priority").default(0),
-    retryCount: integer("retry_count").default(0),
-    maxRetries: integer("max_retries").default(3),
-    nextRetryAt: timestamp("next_retry_at"),
+    }),
+    resourceType: satusehatResourceTypeEnum("resource_type").notNull(),
+    operation: satusehatOperationEnum("operation").notNull(),
+    localId: uuid("local_id").notNull(),
     satusehatId: varchar("satusehat_id", { length: 100 }),
-    responseStatus: integer("response_status"),
-    responseBody: jsonb("response_body").$type<Record<string, any>>(),
+    payload: jsonb("payload").$type<Record<string, any>>(),
+    status: satusehatSyncStatusEnum("status").default("pending"),
+    priority: integer("priority").default(0),
+    attempts: integer("attempts").default(0),
+    lastAttemptAt: timestamp("last_attempt_at"),
+    nextRetryAt: timestamp("next_retry_at"),
     errorMessage: text("error_message"),
-    startedAt: timestamp("started_at"),
     completedAt: timestamp("completed_at"),
+    notes: text("notes"),
   },
   (table) => [
-    index("idx_sync_queue_status").on(table.status),
-    index("idx_sync_queue_encounter").on(table.encounterId),
-    index("idx_sync_queue_resource").on(table.resourceType, table.resourceId),
-    index("idx_sync_queue_retry").on(table.status, table.nextRetryAt),
-    index("idx_sync_queue_priority").on(table.priority, table.status),
+    index("idx_satusehat_sync_org_id").on(table.organizationId),
+    index("idx_satusehat_sync_branch_id").on(table.branchId),
+    index("idx_satusehat_sync_status").on(table.status),
+    index("idx_satusehat_sync_priority").on(table.priority),
+    index("idx_satusehat_sync_next_retry").on(table.nextRetryAt),
   ]
 );
 
 /**
  * SatuSehat error logs table
- * Logs errors from SatuSehat API calls
+ * Represents SatuSehat error logs
  */
 export const satusehatErrorLogs = pgTable(
   "satusehat_error_logs",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    createdBy: uuid("created_by"),
-    updatedBy: uuid("updated_by"),
-    deletedAt: timestamp("deleted_at"),
-    deletedBy: uuid("deleted_by"),
-
-    // BSON resource storage
-    resource: jsonb("resource").$type<BsonResource>(),
+    ...fullFields,
 
     // Error log fields
-    syncQueueId: uuid("sync_queue_id").references(() => satusehatSyncQueue.id, {
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    branchId: uuid("branch_id").references(() => organizations.id, {
       onDelete: "set null",
     }),
-    resourceType: varchar("resource_type", { length: 50 }).notNull(),
-    resourceId: varchar("resource_id", { length: 100 }).notNull(),
-    operation: varchar("operation", { length: 20 }).notNull(),
-    errorCategory: satusehatErrorCategoryEnum("error_category").notNull(),
-    httpStatus: integer("http_status"),
-    errorCode: varchar("error_code", { length: 50 }),
+    resourceType: satusehatResourceTypeEnum("resource_type").notNull(),
+    operation: satusehatOperationEnum("operation").notNull(),
+    localId: uuid("local_id").notNull(),
+    satusehatId: varchar("satusehat_id", { length: 100 }),
+    category: satusehatErrorCategoryEnum("category").notNull(),
+    statusCode: integer("status_code"),
     errorMessage: text("error_message").notNull(),
-    errorDetails: jsonb("error_details").$type<Record<string, any>>(),
-    requestUrl: varchar("request_url", { length: 500 }),
-    requestBody: jsonb("request_body").$type<Record<string, any>>(),
-    responseBody: jsonb("response_body").$type<Record<string, any>>(),
-    resolutionStatus: satusehatErrorResolutionEnum("resolution_status")
-      .notNull()
-      .default("pending"),
-    resolutionNotes: text("resolution_notes"),
+    resolution: satusehatErrorResolutionEnum("resolution").default("pending"),
+    resolvedAt: timestamp("resolved_at"),
     resolvedBy: uuid("resolved_by").references(() => users.id, {
       onDelete: "set null",
     }),
-    resolvedAt: timestamp("resolved_at"),
-    timestamp: timestamp("timestamp").notNull(),
+    notes: text("notes"),
   },
   (table) => [
-    index("idx_error_log_queue").on(table.syncQueueId),
-    index("idx_error_log_category").on(table.errorCategory),
-    index("idx_error_log_status").on(table.resolutionStatus),
-    index("idx_error_log_timestamp").on(table.timestamp),
+    index("idx_satusehat_error_org_id").on(table.organizationId),
+    index("idx_satusehat_error_branch_id").on(table.branchId),
+    index("idx_satusehat_error_category").on(table.category),
+    index("idx_satusehat_error_status_code").on(table.statusCode),
+    index("idx_satusehat_error_resolution").on(table.resolution),
+    index("idx_satusehat_error_created_at").on(table.createdAt),
   ]
 );
 
 /**
  * SatuSehat consents table
- * Tracks patient consent for data sharing with SatuSehat
+ * Represents SatuSehat consent records
  */
 export const satusehatConsents = pgTable(
   "satusehat_consents",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    createdBy: uuid("created_by"),
-    updatedBy: uuid("updated_by"),
-    deletedAt: timestamp("deleted_at"),
-    deletedBy: uuid("deleted_by"),
-
-    // BSON resource storage
-    resource: jsonb("resource").$type<BsonResource>(),
+    ...fullFields,
 
     // Consent fields
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    branchId: uuid("branch_id").references(() => organizations.id, {
+      onDelete: "set null",
+    }),
     patientId: uuid("patient_id")
       .notNull()
       .references(() => patients.id, { onDelete: "cascade" }),
-    consentGiven: boolean("consent_given").notNull(),
-    consentScope: satusehatConsentScopeEnum("consent_scope").notNull(),
-    consentDatetime: timestamp("consent_datetime").notNull(),
-    consentMethod: satusehatConsentMethodEnum("consent_method").notNull(),
-    witnessedBy: uuid("witnessed_by").references(() => users.id, {
+    scope: satusehatConsentScopeEnum("scope").notNull(),
+    method: satusehatConsentMethodEnum("method").notNull(),
+    consentDate: timestamp("consent_date").notNull(),
+    consentedBy: uuid("consented_by")
+      .notNull()
+      .references(() => users.id, { onDelete: "set null" }),
+    isRevoked: boolean("is_revoked").default(false),
+    revokedAt: timestamp("revoked_at"),
+    revokedBy: uuid("revoked_by").references(() => users.id, {
       onDelete: "set null",
     }),
-    consentDocumentUrl: varchar("consent_document_url", { length: 500 }),
-    validFrom: timestamp("valid_from").notNull(),
-    validUntil: timestamp("valid_until"),
-    revoked: boolean("revoked").default(false),
-    revokedAt: timestamp("revoked_at"),
-    revokedReason: text("revoked_reason"),
+    notes: text("notes"),
   },
   (table) => [
-    index("idx_consent_patient").on(table.patientId),
-    index("idx_consent_valid").on(table.validFrom, table.validUntil),
-    index("idx_consent_revoked").on(table.revoked),
+    index("idx_satusehat_consent_org_id").on(table.organizationId),
+    index("idx_satusehat_consent_branch_id").on(table.branchId),
+    index("idx_satusehat_consent_patient_id").on(table.patientId),
+    index("idx_satusehat_consent_scope").on(table.scope),
+    index("idx_satusehat_consent_date").on(table.consentDate),
   ]
 );
 
@@ -346,20 +311,18 @@ export const satusehatConsents = pgTable(
 
 export const satusehatConfigsRelations = relations(
   satusehatConfigs,
-  ({ one }) => ({
-    organization: one(organizations, {
-      fields: [satusehatConfigs.organizationId],
-      references: [organizations.id],
-    }),
+  ({ many }) => ({
+    locations: many(satusehatLocations),
+    practitioners: many(satusehatPractitioners),
   })
 );
 
 export const satusehatLocationsRelations = relations(
   satusehatLocations,
   ({ one }) => ({
-    polyclinic: one(polyclinics, {
-      fields: [satusehatLocations.polyclinicId],
-      references: [polyclinics.id],
+    config: one(satusehatConfigs, {
+      fields: [satusehatLocations.organizationId, satusehatLocations.branchId],
+      references: [satusehatConfigs.organizationId, satusehatConfigs.branchId],
     }),
   })
 );
@@ -367,8 +330,15 @@ export const satusehatLocationsRelations = relations(
 export const satusehatPractitionersRelations = relations(
   satusehatPractitioners,
   ({ one }) => ({
+    config: one(satusehatConfigs, {
+      fields: [
+        satusehatPractitioners.organizationId,
+        satusehatPractitioners.branchId,
+      ],
+      references: [satusehatConfigs.organizationId, satusehatConfigs.branchId],
+    }),
     practitioner: one(practitioners, {
-      fields: [satusehatPractitioners.practitionerId],
+      fields: [satusehatPractitioners.localPractitionerId],
       references: [practitioners.id],
     }),
   })
@@ -381,8 +351,8 @@ export const patientIhsLookupsRelations = relations(
       fields: [patientIhsLookups.patientId],
       references: [patients.id],
     }),
-    searchedByUser: one(users, {
-      fields: [patientIhsLookups.searchedBy],
+    verifiedBy: one(users, {
+      fields: [patientIhsLookups.verifiedBy],
       references: [users.id],
     }),
   })
@@ -390,23 +360,22 @@ export const patientIhsLookupsRelations = relations(
 
 export const satusehatSyncQueueRelations = relations(
   satusehatSyncQueue,
-  ({ one, many }) => ({
-    encounter: one(encounters, {
-      fields: [satusehatSyncQueue.encounterId],
-      references: [encounters.id],
+  ({ one }) => ({
+    organization: one(organizations, {
+      fields: [satusehatSyncQueue.organizationId, satusehatSyncQueue.branchId],
+      references: [organizations.id, organizations.id],
     }),
-    errorLogs: many(satusehatErrorLogs),
   })
 );
 
 export const satusehatErrorLogsRelations = relations(
   satusehatErrorLogs,
   ({ one }) => ({
-    syncQueue: one(satusehatSyncQueue, {
-      fields: [satusehatErrorLogs.syncQueueId],
-      references: [satusehatSyncQueue.id],
+    organization: one(organizations, {
+      fields: [satusehatErrorLogs.organizationId, satusehatErrorLogs.branchId],
+      references: [organizations.id, organizations.id],
     }),
-    resolvedByUser: one(users, {
+    resolvedBy: one(users, {
       fields: [satusehatErrorLogs.resolvedBy],
       references: [users.id],
     }),
@@ -420,8 +389,12 @@ export const satusehatConsentsRelations = relations(
       fields: [satusehatConsents.patientId],
       references: [patients.id],
     }),
-    witnessedByUser: one(users, {
-      fields: [satusehatConsents.witnessedBy],
+    consentedBy: one(users, {
+      fields: [satusehatConsents.consentedBy],
+      references: [users.id],
+    }),
+    revokedBy: one(users, {
+      fields: [satusehatConsents.revokedBy],
       references: [users.id],
     }),
   })

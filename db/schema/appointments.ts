@@ -18,6 +18,10 @@ import {
   queueStatusEnum,
   queuePriorityEnum,
   BsonResource,
+  fullFields,
+  baseFields,
+  bsonFields,
+  softDeleteFields,
 } from "./core";
 import { organizations } from "./organization";
 import { users } from "./users";
@@ -36,16 +40,7 @@ import { practitioners } from "./practitioners";
 export const appointments = pgTable(
   "appointments",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    createdBy: uuid("created_by"),
-    updatedBy: uuid("updated_by"),
-    deletedAt: timestamp("deleted_at"),
-    deletedBy: uuid("deleted_by"),
-
-    // BSON resource storage
-    resource: jsonb("resource").$type<BsonResource>(),
+    ...fullFields,
 
     // Appointment fields
     organizationId: uuid("organization_id")
@@ -116,16 +111,7 @@ export const appointments = pgTable(
 export const appointmentReminders = pgTable(
   "appointment_reminders",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    createdBy: uuid("created_by"),
-    updatedBy: uuid("updated_by"),
-    deletedAt: timestamp("deleted_at"),
-    deletedBy: uuid("deleted_by"),
-
-    // BSON resource storage
-    resource: jsonb("resource").$type<BsonResource>(),
+    ...fullFields,
 
     // Reminder fields
     appointmentId: uuid("appointment_id")
@@ -153,16 +139,7 @@ export const appointmentReminders = pgTable(
 export const queues = pgTable(
   "queues",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    createdBy: uuid("created_by"),
-    updatedBy: uuid("updated_by"),
-    deletedAt: timestamp("deleted_at"),
-    deletedBy: uuid("deleted_by"),
-
-    // BSON resource storage
-    resource: jsonb("resource").$type<BsonResource>(),
+    ...fullFields,
 
     // Queue fields
     organizationId: uuid("organization_id")
@@ -226,13 +203,9 @@ export const queues = pgTable(
 export const queueCallLogs = pgTable(
   "queue_call_logs",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    deletedAt: timestamp("deleted_at"),
-
-    // BSON resource storage
-    resource: jsonb("resource").$type<BsonResource>(),
+    ...baseFields,
+    ...bsonFields,
+    ...softDeleteFields,
 
     // Call log fields
     queueId: uuid("queue_id")
@@ -260,16 +233,7 @@ export const queueCallLogs = pgTable(
 export const queueDisplayConfigs = pgTable(
   "queue_display_configs",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    createdBy: uuid("created_by"),
-    updatedBy: uuid("updated_by"),
-    deletedAt: timestamp("deleted_at"),
-    deletedBy: uuid("deleted_by"),
-
-    // BSON resource storage
-    resource: jsonb("resource").$type<BsonResource>(),
+    ...fullFields,
 
     // Display config fields
     organizationId: uuid("organization_id")

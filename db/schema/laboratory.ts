@@ -25,13 +25,14 @@ import {
   diagnosticReportStatusEnum,
   criticalNotificationMethodEnum,
   BsonResource,
+  fullFields,
+  baseFields,
+  bsonFields,
+  softDeleteFields,
 } from "./core";
 import { organizations } from "./organization";
 import { users } from "./users";
 import { patients } from "./patients";
-import { polyclinics } from "./practitioners";
-import { practitioners } from "./practitioners";
-import { encounters } from "./medical";
 
 // ============================================================================
 // LABORATORY TABLES
@@ -39,70 +40,33 @@ import { encounters } from "./medical";
 
 /**
  * Lab tests table
- * Represents lab test catalog
+ * Represents lab tests
  */
 export const labTests = pgTable(
   "lab_tests",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    createdBy: uuid("created_by"),
-    updatedBy: uuid("updated_by"),
-    deletedAt: timestamp("deleted_at"),
-    deletedBy: uuid("deleted_by"),
-
-    // BSON resource storage
-    resource: jsonb("resource").$type<BsonResource>(),
+    ...fullFields,
 
     // Lab test fields
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
-      onDelete: "set null",
-    }),
-    testCode: varchar("test_code", { length: 20 }).notNull().unique(),
-    loincCode: varchar("loinc_code", { length: 20 }),
-    loincDisplay: varchar("loinc_display", { length: 255 }),
+    testCode: varchar("test_code", { length: 20 }).notNull(),
     testName: varchar("test_name", { length: 255 }).notNull(),
-    testNameShort: varchar("test_name_short", { length: 50 }),
     testNameId: varchar("test_name_id", { length: 255 }), // Indonesian name
-    category: labTestCategoryEnum("category").notNull(),
-    department: varchar("department", { length: 100 }),
-    section: varchar("section", { length: 100 }),
-    specimenType: labTestTypeEnum("specimen_type"),
-    specimenVolume: varchar("specimen_volume", { length: 50 }),
-    specimenContainer: varchar("specimen_container", { length: 100 }),
-    specimenInstructions: text("specimen_instructions"),
-    requiresFasting: boolean("requires_fasting").default(false),
-    fastingHours: integer("fasting_hours"),
-    tatHours: integer("tat_hours"), // Turnaround time
-    isStatAvailable: boolean("is_stat_available").default(true),
-    method: varchar("method", { length: 100 }),
-    equipment: varchar("equipment", { length: 100 }),
-    resultType: varchar("result_type", { length: 20 }), // numeric, text, coded, panel
-    unit: varchar("unit", { length: 20 }),
-    decimalPlaces: integer("decimal_places"),
-    resultOptions: jsonb("result_options").$type<
-      Array<{
-        code: string;
-        name: string;
-        nameId: string;
-      }>
-    >(),
-    basePrice: varchar("base_price", { length: 20 }),
-    bpjsPrice: varchar("bpjs_price", { length: 20 }),
-    isPanel: boolean("is_panel").default(false),
-    panelTests: jsonb("panel_tests").$type<string[]>(),
+    testCategory: labTestCategoryEnum("test_category").notNull(),
+    testType: labTestTypeEnum("test_type").notNull(),
+    description: text("description"),
+    specimenType: varchar("specimen_type", { length: 50 }),
+    resultType: labResultTypeEnum("result_type").notNull(),
+    unit: varchar("unit", { length: 50 }),
+    normalRange: text("normal_range"),
     isActive: boolean("is_active").default(true),
   },
   (table) => [
     index("idx_lab_test_org_id").on(table.organizationId),
-    index("idx_lab_test_branch_id").on(table.branchId),
     uniqueIndex("idx_lab_test_code").on(table.testCode),
-    index("idx_lab_test_loinc").on(table.loincCode),
-    index("idx_lab_test_category").on(table.category),
+    index("idx_lab_test_category").on(table.testCategory),
     index("idx_lab_test_active").on(table.isActive),
   ]
 );
@@ -114,58 +78,36 @@ export const labTests = pgTable(
 export const labTestReferenceRanges = pgTable(
   "lab_test_reference_ranges",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    createdBy: uuid("created_by"),
-    updatedBy: uuid("updated_by"),
-    deletedAt: timestamp("deleted_at"),
-    deletedBy: uuid("deleted_by"),
-
-    // BSON resource storage
-    resource: jsonb("resource").$type<BsonResource>(),
+    ...fullFields,
 
     // Reference range fields
     labTestId: uuid("lab_test_id")
       .notNull()
       .references(() => labTests.id, { onDelete: "cascade" }),
-    gender: varchar("gender", { length: 10 }).notNull(), // male, female, all
-    ageMinYears: integer("age_min_years"),
-    ageMaxYears: integer("age_max_years"),
-    normalLow: varchar("normal_low", { length: 20 }),
-    normalHigh: varchar("normal_high", { length: 20 }),
-    criticalLow: varchar("critical_low", { length: 20 }),
-    criticalHigh: varchar("critical_high", { length: 20 }),
-    interpretationGuide: text("interpretation_guide"),
+    gender: varchar("gender", { length: 10 }),
+    ageMin: integer("age_min"),
+    ageMax: integer("age_max"),
+    ageUnit: varchar("age_unit", { length: 20 }), // years, months
+    minValue: varchar("min_value", { length: 20 }),
+    maxValue: varchar("max_value", { length: 20 }),
+    minValueCritical: varchar("min_value_critical", { length: 20 }),
+    maxValueCritical: varchar("max_value_critical", { length: 20 }),
+    notes: text("notes"),
   },
   (table) => [
-    index("idx_ref_range_lab_test_id").on(table.labTestId),
-    index("idx_ref_range_gender_age").on(
-      table.labTestId,
-      table.gender,
-      table.ageMinYears,
-      table.ageMaxYears
-    ),
+    index("idx_lab_test_reference_lab_test_id").on(table.labTestId),
+    index("idx_lab_test_reference_gender").on(table.gender),
   ]
 );
 
 /**
  * Lab queue table
- * Represents lab order queue
+ * Represents lab queue
  */
 export const labQueue = pgTable(
   "lab_queue",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    createdBy: uuid("created_by"),
-    updatedBy: uuid("updated_by"),
-    deletedAt: timestamp("deleted_at"),
-    deletedBy: uuid("deleted_by"),
-
-    // BSON resource storage
-    resource: jsonb("resource").$type<BsonResource>(),
+    ...fullFields,
 
     // Queue fields
     organizationId: uuid("organization_id")
@@ -174,50 +116,27 @@ export const labQueue = pgTable(
     branchId: uuid("branch_id").references(() => organizations.id, {
       onDelete: "set null",
     }),
-    labOrderId: uuid("lab_order_id").references(() => labOrders.id, {
-      onDelete: "set null",
-    }),
     patientId: uuid("patient_id")
       .notNull()
       .references(() => patients.id, { onDelete: "cascade" }),
-    encounterId: uuid("encounter_id").references(() => encounters.id, {
-      onDelete: "set null",
-    }),
     queueNumber: varchar("queue_number", { length: 20 }).notNull(),
-    queueDate: date("queue_date").notNull(),
-    priority: labQueuePriorityEnum("priority").default("routine"),
-    isFastingVerified: boolean("is_fasting_verified").default(false),
     status: labQueueStatusEnum("status").default("pending"),
-    orderedAt: timestamp("ordered_at"),
-    collectionStartedAt: timestamp("collection_started_at"),
-    collectedAt: timestamp("collected_at"),
-    receivedAt: timestamp("received_at"),
-    processingStartedAt: timestamp("processing_started_at"),
-    resultedAt: timestamp("resulted_at"),
-    authorizedAt: timestamp("authorized_at"),
-    completedAt: timestamp("completed_at"),
-    collectedBy: uuid("collected_by").references(() => users.id, {
+    priority: labQueuePriorityEnum("priority").default("routine"),
+    isFasting: boolean("is_fasting").default(false),
+    fastingVerified: boolean("fasting_verified").default(false),
+    fastingVerifiedAt: timestamp("fasting_verified_at"),
+    fastingVerifiedBy: uuid("fasting_verified_by").references(() => users.id, {
       onDelete: "set null",
     }),
-    processedBy: uuid("processed_by").references(() => users.id, {
-      onDelete: "set null",
-    }),
-    resultedBy: uuid("resulted_by").references(() => users.id, {
-      onDelete: "set null",
-    }),
-    authorizedBy: uuid("authorized_by").references(() => users.id, {
-      onDelete: "set null",
-    }),
-    collectionPoint: varchar("collection_point", { length: 20 }).default("lab"),
+    clinicalInfo: text("clinical_info"),
     notes: text("notes"),
   },
   (table) => [
     index("idx_lab_queue_org_id").on(table.organizationId),
     index("idx_lab_queue_branch_id").on(table.branchId),
-    index("idx_lab_queue_order_id").on(table.labOrderId),
     index("idx_lab_queue_patient_id").on(table.patientId),
-    index("idx_lab_queue_date").on(table.queueDate),
     index("idx_lab_queue_status").on(table.status),
+    index("idx_lab_queue_priority").on(table.priority),
   ]
 );
 
@@ -228,18 +147,9 @@ export const labQueue = pgTable(
 export const labOrders = pgTable(
   "lab_orders",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    createdBy: uuid("created_by"),
-    updatedBy: uuid("updated_by"),
-    deletedAt: timestamp("deleted_at"),
-    deletedBy: uuid("deleted_by"),
+    ...fullFields,
 
-    // BSON resource storage
-    resource: jsonb("resource").$type<BsonResource>(),
-
-    // Lab order fields
+    // Order fields
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
@@ -249,7 +159,7 @@ export const labOrders = pgTable(
     patientId: uuid("patient_id")
       .notNull()
       .references(() => patients.id, { onDelete: "cascade" }),
-    encounterId: uuid("encounter_id").references(() => encounters.id, {
+    queueId: uuid("queue_id").references(() => labQueue.id, {
       onDelete: "set null",
     }),
     orderNumber: varchar("order_number", { length: 30 }).notNull().unique(),
@@ -258,6 +168,7 @@ export const labOrders = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "set null" }),
     priority: labQueuePriorityEnum("priority").default("routine"),
+    status: labQueueStatusEnum("status").default("pending"),
     clinicalInfo: text("clinical_info"),
     notes: text("notes"),
   },
@@ -265,8 +176,10 @@ export const labOrders = pgTable(
     index("idx_lab_order_org_id").on(table.organizationId),
     index("idx_lab_order_branch_id").on(table.branchId),
     index("idx_lab_order_patient_id").on(table.patientId),
-    index("idx_lab_order_encounter_id").on(table.encounterId),
+    index("idx_lab_order_queue_id").on(table.queueId),
     uniqueIndex("idx_lab_order_number").on(table.orderNumber),
+    index("idx_lab_order_status").on(table.status),
+    index("idx_lab_order_ordered_at").on(table.orderedAt),
   ]
 );
 
@@ -277,102 +190,63 @@ export const labOrders = pgTable(
 export const labOrderItems = pgTable(
   "lab_order_items",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    createdBy: uuid("created_by"),
-    updatedBy: uuid("updated_by"),
-    deletedAt: timestamp("deleted_at"),
-    deletedBy: uuid("deleted_by"),
+    ...fullFields,
 
-    // BSON resource storage
-    resource: jsonb("resource").$type<BsonResource>(),
-
-    // Lab order item fields
-    labOrderId: uuid("lab_order_id")
+    // Order item fields
+    orderId: uuid("order_id")
       .notNull()
       .references(() => labOrders.id, { onDelete: "cascade" }),
-    labTestId: uuid("lab_test_id").notNull(),
+    labTestId: uuid("lab_test_id")
+      .notNull()
+      .references(() => labTests.id, { onDelete: "restrict" }),
     testCode: varchar("test_code", { length: 20 }).notNull(),
     testName: varchar("test_name", { length: 255 }).notNull(),
     testNameId: varchar("test_name_id", { length: 255 }),
-    loincCode: varchar("loinc_code", { length: 20 }),
-    specimenType: labTestTypeEnum("specimen_type"),
-    priority: varchar("priority", { length: 20 }),
+    priority: labQueuePriorityEnum("priority").default("routine"),
+    status: labQueueStatusEnum("status").default("pending"),
     notes: text("notes"),
   },
-  (table) => [index("idx_lab_order_item_lab_order_id").on(table.labOrderId)]
+  (table) => [
+    index("idx_lab_order_item_order_id").on(table.orderId),
+    index("idx_lab_order_item_lab_test_id").on(table.labTestId),
+    index("idx_lab_order_item_status").on(table.status),
+  ]
 );
 
 /**
  * Specimens table
- * Represents lab specimens
+ * Represents specimens
  */
 export const specimens = pgTable(
   "specimens",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    createdBy: uuid("created_by"),
-    updatedBy: uuid("updated_by"),
-    deletedAt: timestamp("deleted_at"),
-    deletedBy: uuid("deleted_by"),
-
-    // BSON resource storage
-    resource: jsonb("resource").$type<BsonResource>(),
+    ...fullFields,
 
     // Specimen fields
-    organizationId: uuid("organization_id")
+    orderItemId: uuid("order_item_id")
       .notNull()
-      .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
-      onDelete: "set null",
-    }),
-    labOrderId: uuid("lab_order_id").references(() => labOrders.id, {
-      onDelete: "cascade",
-    }),
-    labOrderItemId: uuid("lab_order_item_id").references(
-      () => labOrderItems.id,
-      { onDelete: "cascade" }
-    ),
-    patientId: uuid("patient_id")
-      .notNull()
-      .references(() => patients.id, { onDelete: "cascade" }),
+      .references(() => labOrderItems.id, { onDelete: "cascade" }),
     specimenNumber: varchar("specimen_number", { length: 30 })
       .notNull()
       .unique(),
-    specimenType: labTestTypeEnum("specimen_type"),
-    containerType: varchar("container_type", { length: 100 }),
-    volume: varchar("volume", { length: 50 }),
-    collectionMethod: varchar("collection_method", { length: 100 }),
-    collectionSite: varchar("collection_site", { length: 100 }),
-    collectedAt: timestamp("collected_at"),
+    specimenType: varchar("specimen_type", { length: 50 }).notNull(),
+    collectionDate: timestamp("collection_date").notNull(),
     collectedBy: uuid("collected_by")
       .notNull()
       .references(() => users.id, { onDelete: "set null" }),
+    status: specimenStatusEnum("status").default("collected"),
+    condition: specimenConditionEnum("condition"),
     receivedAt: timestamp("received_at"),
     receivedBy: uuid("received_by").references(() => users.id, {
       onDelete: "set null",
     }),
-    conditionOnReceipt: specimenConditionEnum("condition_on_receipt"),
-    isRejected: boolean("is_rejected").default(false),
-    rejectionReason: text("rejection_reason"),
-    storageLocation: varchar("storage_location", { length: 100 }),
-    storageTemperature: varchar("storage_temperature", { length: 50 }),
-    status: specimenStatusEnum("status").default("collected"),
-    disposedAt: timestamp("disposed_at"),
-    disposalMethod: varchar("disposal_method", { length: 100 }),
-    satusehatSpecimenId: varchar("satusehat_specimen_id", { length: 100 }),
     notes: text("notes"),
   },
   (table) => [
-    index("idx_specimen_org_id").on(table.organizationId),
-    index("idx_specimen_branch_id").on(table.branchId),
-    index("idx_specimen_lab_order_id").on(table.labOrderId),
+    index("idx_specimen_order_item_id").on(table.orderItemId),
     uniqueIndex("idx_specimen_number").on(table.specimenNumber),
-    index("idx_specimen_patient_id").on(table.patientId),
     index("idx_specimen_status").on(table.status),
+    index("idx_specimen_collection_date").on(table.collectionDate),
   ]
 );
 
@@ -383,88 +257,33 @@ export const specimens = pgTable(
 export const labResults = pgTable(
   "lab_results",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    createdBy: uuid("created_by"),
-    updatedBy: uuid("updated_by"),
-    deletedAt: timestamp("deleted_at"),
-    deletedBy: uuid("deleted_by"),
+    ...fullFields,
 
-    // BSON resource storage
-    resource: jsonb("resource").$type<BsonResource>(),
-
-    // Lab result fields
-    organizationId: uuid("organization_id")
+    // Result fields
+    orderItemId: uuid("order_item_id")
       .notNull()
-      .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
-      onDelete: "set null",
-    }),
-    labOrderId: uuid("lab_order_id").references(() => labOrders.id, {
-      onDelete: "cascade",
-    }),
-    labOrderItemId: uuid("lab_order_item_id").references(
-      () => labOrderItems.id,
-      { onDelete: "cascade" }
-    ),
+      .references(() => labOrderItems.id, { onDelete: "cascade" }),
     specimenId: uuid("specimen_id").references(() => specimens.id, {
       onDelete: "set null",
     }),
-    patientId: uuid("patient_id")
-      .notNull()
-      .references(() => patients.id, { onDelete: "cascade" }),
-    labTestId: uuid("lab_test_id").references(() => labTests.id, {
-      onDelete: "restrict",
-    }),
-    loincCode: varchar("loinc_code", { length: 20 }),
-    testName: varchar("test_name", { length: 255 }).notNull(),
-    resultType: varchar("result_type", { length: 20 }), // numeric, text, coded
+    resultDate: timestamp("result_date").notNull(),
     resultValue: varchar("result_value", { length: 255 }),
-    resultNumeric: varchar("result_numeric", { length: 20 }),
-    resultUnit: varchar("result_unit", { length: 20 }),
-    referenceRangeLow: varchar("reference_range_low", { length: 20 }),
-    referenceRangeHigh: varchar("reference_range_high", { length: 20 }),
+    resultText: text("result_text"),
     interpretation: labResultInterpretationEnum("interpretation"),
-    interpretationText: text("interpretation_text"),
+    isAbnormal: boolean("is_abnormal").default(false),
     isCritical: boolean("is_critical").default(false),
-    criticalNotified: boolean("critical_notified").default(false),
-    criticalNotifiedAt: timestamp("critical_notified_at"),
-    criticalNotifiedTo: varchar("critical_notified_to", { length: 255 }),
-    criticalNotifiedBy: uuid("critical_notified_by").references(
-      () => users.id,
-      { onDelete: "set null" }
-    ),
-    criticalAcknowledged: boolean("critical_acknowledged").default(false),
-    criticalAcknowledgedAt: timestamp("critical_acknowledged_at"),
     status: labResultStatusEnum("status").default("preliminary"),
-    resultedAt: timestamp("resulted_at"),
-    resultedBy: uuid("resulted_by")
-      .notNull()
-      .references(() => users.id, { onDelete: "set null" }),
-    authorizedAt: timestamp("authorized_at"),
-    authorizedBy: uuid("authorized_by").references(() => users.id, {
+    verifiedAt: timestamp("verified_at"),
+    verifiedBy: uuid("verified_by").references(() => users.id, {
       onDelete: "set null",
     }),
-    amendedFromId: uuid("amended_from_id"),
-    amendmentReason: text("amendment_reason"),
     notes: text("notes"),
-    satusehatObservationId: varchar("satusehat_observation_id", {
-      length: 100,
-    }),
   },
   (table) => [
-    index("idx_lab_result_org_id").on(table.organizationId),
-    index("idx_lab_result_branch_id").on(table.branchId),
-    index("idx_lab_result_lab_order_id").on(table.labOrderId),
+    index("idx_lab_result_order_item_id").on(table.orderItemId),
     index("idx_lab_result_specimen_id").on(table.specimenId),
-    index("idx_lab_result_patient_id").on(table.patientId),
-    index("idx_lab_result_critical").on(table.isCritical),
-    index("idx_lab_result_critical_notified").on(
-      table.isCritical,
-      table.criticalNotified
-    ),
     index("idx_lab_result_status").on(table.status),
+    index("idx_lab_result_date").on(table.resultDate),
   ]
 );
 
@@ -475,66 +294,38 @@ export const labResults = pgTable(
 export const diagnosticReports = pgTable(
   "diagnostic_reports",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    createdBy: uuid("created_by"),
-    updatedBy: uuid("updated_by"),
-    deletedAt: timestamp("deleted_at"),
-    deletedBy: uuid("deleted_by"),
+    ...fullFields,
 
-    // BSON resource storage
-    resource: jsonb("resource").$type<BsonResource>(),
-
-    // Diagnostic report fields
+    // Report fields
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
     branchId: uuid("branch_id").references(() => organizations.id, {
       onDelete: "set null",
     }),
-    labOrderId: uuid("lab_order_id").references(() => labOrders.id, {
-      onDelete: "cascade",
-    }),
     patientId: uuid("patient_id")
       .notNull()
       .references(() => patients.id, { onDelete: "cascade" }),
-    encounterId: uuid("encounter_id").references(() => encounters.id, {
+    orderId: uuid("order_id").references(() => labOrders.id, {
       onDelete: "set null",
     }),
     reportNumber: varchar("report_number", { length: 30 }).notNull().unique(),
-    category: labTestCategoryEnum("category").notNull(),
-    status: diagnosticReportStatusEnum("status").default("registered"),
-    issuedAt: timestamp("issued_at"),
-    effectiveDatetime: timestamp("effective_datetime"),
-    authorizedBy: uuid("authorized_by")
+    reportDate: timestamp("report_date").notNull(),
+    status: diagnosticReportStatusEnum("status").default("preliminary"),
+    generatedBy: uuid("generated_by")
       .notNull()
-      .references(() => practitioners.id, { onDelete: "set null" }),
-    verifiedBy: uuid("verified_by").references(() => users.id, {
-      onDelete: "set null",
-    }),
-    results: jsonb("results").$type<
-      Array<{
-        testName: string;
-        result: string;
-        unit: string;
-        referenceRange: string;
-        interpretation: string;
-      }>
-    >(),
+      .references(() => users.id, { onDelete: "set null" }),
     conclusion: text("conclusion"),
-    codedDiagnosis: varchar("coded_diagnosis", { length: 20 }),
-    satusehatDiagnosticReportId: varchar("satusehat_diagnostic_report_id", {
-      length: 100,
-    }),
     notes: text("notes"),
   },
   (table) => [
     index("idx_diagnostic_report_org_id").on(table.organizationId),
     index("idx_diagnostic_report_branch_id").on(table.branchId),
-    index("idx_diagnostic_report_lab_order_id").on(table.labOrderId),
     index("idx_diagnostic_report_patient_id").on(table.patientId),
+    index("idx_diagnostic_report_order_id").on(table.orderId),
     uniqueIndex("idx_diagnostic_report_number").on(table.reportNumber),
+    index("idx_diagnostic_report_status").on(table.status),
+    index("idx_diagnostic_report_date").on(table.reportDate),
   ]
 );
 
@@ -545,43 +336,41 @@ export const diagnosticReports = pgTable(
 export const criticalValueNotifications = pgTable(
   "critical_value_notifications",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    createdBy: uuid("created_by"),
-    updatedBy: uuid("updated_by"),
-    deletedAt: timestamp("deleted_at"),
-    deletedBy: uuid("deleted_by"),
+    ...baseFields,
+    ...bsonFields,
+    ...softDeleteFields,
 
-    // BSON resource storage
-    resource: jsonb("resource").$type<BsonResource>(),
-
-    // Critical notification fields
+    // Notification fields
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    branchId: uuid("branch_id").references(() => organizations.id, {
+      onDelete: "set null",
+    }),
     labResultId: uuid("lab_result_id")
       .notNull()
       .references(() => labResults.id, { onDelete: "cascade" }),
-    patientId: uuid("patient_id")
-      .notNull()
-      .references(() => patients.id, { onDelete: "cascade" }),
-    testName: varchar("test_name", { length: 255 }),
-    resultValue: varchar("result_value", { length: 255 }),
-    resultUnit: varchar("result_unit", { length: 20 }),
-    notificationTime: timestamp("notification_time").notNull(),
+    notificationDate: timestamp("notification_date").notNull(),
     notifiedBy: uuid("notified_by")
       .notNull()
       .references(() => users.id, { onDelete: "set null" }),
-    notificationMethod: criticalNotificationMethodEnum("notification_method"),
-    recipientName: varchar("recipient_name", { length: 255 }),
-    recipientRole: varchar("recipient_role", { length: 100 }),
-    recipientContact: varchar("recipient_contact", { length: 100 }),
-    acknowledged: boolean("acknowledged").default(false),
+    notifiedTo: uuid("notified_to").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    notificationMethod: criticalNotificationMethodEnum(
+      "notification_method"
+    ).notNull(),
     acknowledgedAt: timestamp("acknowledged_at"),
-    actionTaken: text("action_taken"),
+    acknowledgedBy: uuid("acknowledged_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    notes: text("notes"),
   },
   (table) => [
-    index("idx_critical_notif_lab_result_id").on(table.labResultId),
-    index("idx_critical_notif_patient_id").on(table.patientId),
-    index("idx_critical_notif_time").on(table.notificationTime),
+    index("idx_critical_notification_org_id").on(table.organizationId),
+    index("idx_critical_notification_branch_id").on(table.branchId),
+    index("idx_critical_notification_lab_result_id").on(table.labResultId),
+    index("idx_critical_notification_date").on(table.notificationDate),
   ]
 );
 
@@ -591,6 +380,7 @@ export const criticalValueNotifications = pgTable(
 
 export const labTestsRelations = relations(labTests, ({ many }) => ({
   referenceRanges: many(labTestReferenceRanges),
+  orderItems: many(labOrderItems),
 }));
 
 export const labTestReferenceRangesRelations = relations(
@@ -603,30 +393,59 @@ export const labTestReferenceRangesRelations = relations(
   })
 );
 
-export const labQueueRelations = relations(labQueue, ({ one }) => ({
-  labOrder: one(labOrders, {
-    fields: [labQueue.labOrderId],
-    references: [labOrders.id],
-  }),
+export const labQueueRelations = relations(labQueue, ({ many }) => ({
+  orders: many(labOrders),
 }));
 
 export const labOrdersRelations = relations(labOrders, ({ many }) => ({
   items: many(labOrderItems),
-  queue: many(labQueue),
 }));
 
-export const labOrderItemsRelations = relations(labOrderItems, ({ many }) => ({
-  specimens: many(specimens),
+export const labOrderItemsRelations = relations(
+  labOrderItems,
+  ({ one, many }) => ({
+    order: one(labOrders, {
+      fields: [labOrderItems.orderId],
+      references: [labOrders.id],
+    }),
+    labTest: one(labTests, {
+      fields: [labOrderItems.labTestId],
+      references: [labTests.id],
+    }),
+    specimens: many(specimens),
+    results: many(labResults),
+  })
+);
+
+export const specimensRelations = relations(specimens, ({ one, many }) => ({
+  orderItem: one(labOrderItems, {
+    fields: [specimens.orderItemId],
+    references: [labOrderItems.id],
+  }),
   results: many(labResults),
 }));
 
-export const specimensRelations = relations(specimens, ({ many }) => ({
-  results: many(labResults),
-}));
-
-export const labResultsRelations = relations(labResults, ({ many }) => ({
+export const labResultsRelations = relations(labResults, ({ one, many }) => ({
+  orderItem: one(labOrderItems, {
+    fields: [labResults.orderItemId],
+    references: [labOrderItems.id],
+  }),
+  specimen: one(specimens, {
+    fields: [labResults.specimenId],
+    references: [specimens.id],
+  }),
   criticalNotifications: many(criticalValueNotifications),
 }));
+
+export const diagnosticReportsRelations = relations(
+  diagnosticReports,
+  ({ one }) => ({
+    order: one(labOrders, {
+      fields: [diagnosticReports.orderId],
+      references: [labOrders.id],
+    }),
+  })
+);
 
 export const criticalValueNotificationsRelations = relations(
   criticalValueNotifications,

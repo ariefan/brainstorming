@@ -10,7 +10,12 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-import { orgTypeEnum, subscriptionPlanEnum, BsonResource } from "./core";
+import {
+  orgTypeEnum,
+  subscriptionPlanEnum,
+  BsonResource,
+  fullFields,
+} from "./core";
 
 // ============================================================================
 // ORGANIZATION TABLES
@@ -23,16 +28,7 @@ import { orgTypeEnum, subscriptionPlanEnum, BsonResource } from "./core";
 export const organizations = pgTable(
   "organizations",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    createdBy: uuid("created_by"),
-    updatedBy: uuid("updated_by"),
-    deletedAt: timestamp("deleted_at"),
-    deletedBy: uuid("deleted_by"),
-
-    // BSON resource storage
-    resource: jsonb("resource").$type<BsonResource>(),
+    ...fullFields,
 
     // Organization fields
     orgCode: varchar("org_code", { length: 20 }).notNull().unique(),
@@ -84,16 +80,7 @@ export const organizations = pgTable(
 export const branches = pgTable(
   "branches",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    createdBy: uuid("created_by"),
-    updatedBy: uuid("updated_by"),
-    deletedAt: timestamp("deleted_at"),
-    deletedBy: uuid("deleted_by"),
-
-    // BSON resource storage
-    resource: jsonb("resource").$type<BsonResource>(),
+    ...fullFields,
 
     // Branch fields
     organizationId: uuid("organization_id")

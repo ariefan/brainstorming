@@ -3980,11 +3980,12 @@ export const bpjsJenisRawatEnum = pgEnum("bpjs_jenis_rawat", [
 ]);
 
 // ============================================================================
-// BASE TABLES
+// BASE TABLE FIELDS - Common field definitions for all tables
 // ============================================================================
 
 /**
- * Base table with common fields for all tables
+ * Common base fields for all tables (id, timestamps)
+ * Usage: ...baseFields
  */
 export const baseFields = {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -3993,87 +3994,58 @@ export const baseFields = {
 };
 
 /**
- * Base table with soft delete support
+ * Soft delete fields
+ * Usage: ...softDeleteFields
  */
 export const softDeleteFields = {
-  ...baseFields,
   deletedAt: timestamp("deleted_at"),
   deletedBy: uuid("deleted_by"),
 };
 
 /**
- * Base table with BSON/JSONB resource storage
+ * BSON/JSONB resource storage field
+ * Usage: ...bsonFields
  */
 export const bsonFields = {
   resource: jsonb("resource").$type<BsonResource>(),
 };
 
 /**
- * Base table for audit trail
+ * Audit trail fields (createdBy, updatedBy)
+ * Usage: ...auditFields
  */
 export const auditFields = {
   createdBy: uuid("created_by"),
   updatedBy: uuid("updated_by"),
-  version: timestamp("version").defaultNow(),
 };
 
 /**
- * Helper function to create a table with standard fields
+ * Full standard fields (base + bson + audit + soft delete)
+ * Usage: ...fullFields
  */
-export function createTable(name: string) {
-  return pgTable(name, {
-    ...baseFields,
-  });
-}
+export const fullFields = {
+  ...baseFields,
+  ...bsonFields,
+  ...auditFields,
+  ...softDeleteFields,
+};
 
 /**
- * Helper function to create a table with soft delete support
+ * Standard fields without soft delete (base + bson + audit)
+ * Usage: ...standardFields
  */
-export function createSoftDeleteTable(name: string) {
-  return pgTable(name, {
-    ...softDeleteFields,
-  });
-}
-
-/**
- * Helper function to create a table with BSON support
- */
-export function createBsonTable(name: string) {
-  return pgTable(name, {
-    ...baseFields,
-    ...bsonFields,
-  });
-}
-
-/**
- * Helper function to create a table with audit trail
- */
-export function createAuditTable(name: string) {
-  return pgTable(name, {
-    ...baseFields,
-    ...auditFields,
-  });
-}
-
-/**
- * Helper function to create a table with all standard features
- */
-export function createFullTable(name: string) {
-  return pgTable(name, {
-    ...baseFields,
-    ...bsonFields,
-    ...auditFields,
-    deletedAt: timestamp("deleted_at"),
-    deletedBy: uuid("deleted_by"),
-  });
-}
+export const standardFields = {
+  ...baseFields,
+  ...bsonFields,
+  ...auditFields,
+};
 
 // ============================================================================
 // COMMON INDEXES
 // ============================================================================
 
 /**
- * Common index definitions
+ * Common index definitions for reference
  */
 export const commonIndexes = {
   createdAt: "created_at",
