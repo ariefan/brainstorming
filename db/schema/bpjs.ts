@@ -30,6 +30,7 @@ import {
   bpjsSepStatusEnum,
   bpjsSeverityLevelEnum,
   bpjsJenisRawatEnum,
+  BsonResource,
 } from "./core";
 import { organizations } from "./organization";
 import { patients } from "./patients";
@@ -57,11 +58,7 @@ export const bpjsConfigs = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Configuration fields
     organizationId: uuid("organization_id")
@@ -87,12 +84,10 @@ export const bpjsConfigs = pgTable(
       .notNull()
       .default("healthy"),
   },
-  (table) => ({
-    orgIdIdx: index("idx_bpjs_config_org").on(table.organizationId),
-    orgIdUnique: uniqueIndex("idx_bpjs_config_org_unique").on(
-      table.organizationId
-    ),
-  })
+  (table) => [
+    index("idx_bpjs_config_org").on(table.organizationId),
+    uniqueIndex("idx_bpjs_config_org_unique").on(table.organizationId),
+  ]
 );
 
 /**
@@ -111,11 +106,7 @@ export const bpjsPeserta = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Peserta fields
     patientId: uuid("patient_id")
@@ -145,11 +136,11 @@ export const bpjsPeserta = pgTable(
       Record<string, any>
     >(),
   },
-  (table) => ({
-    patientIdIdx: index("idx_peserta_patient").on(table.patientId),
-    noKartuIdx: index("idx_peserta_kartu").on(table.noKartu),
-    nikIdx: index("idx_peserta_nik").on(table.nik),
-  })
+  (table) => [
+    index("idx_peserta_patient").on(table.patientId),
+    index("idx_peserta_kartu").on(table.noKartu),
+    index("idx_peserta_nik").on(table.nik),
+  ]
 );
 
 /**
@@ -168,11 +159,7 @@ export const bpjsSep = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // SEP fields
     patientId: uuid("patient_id")
@@ -215,14 +202,14 @@ export const bpjsSep = pgTable(
     }),
     apiResponse: jsonb("api_response").$type<Record<string, any>>(),
   },
-  (table) => ({
-    noSepIdx: uniqueIndex("idx_sep_no").on(table.noSep),
-    patientIdIdx: index("idx_sep_patient").on(table.patientId),
-    encounterIdIdx: index("idx_sep_encounter").on(table.encounterId),
-    admissionIdIdx: index("idx_sep_admission").on(table.admissionId),
-    tglSepIdx: index("idx_sep_date").on(table.tglSep),
-    statusIdx: index("idx_sep_status").on(table.status),
-  })
+  (table) => [
+    uniqueIndex("idx_sep_no").on(table.noSep),
+    index("idx_sep_patient").on(table.patientId),
+    index("idx_sep_encounter").on(table.encounterId),
+    index("idx_sep_admission").on(table.admissionId),
+    index("idx_sep_date").on(table.tglSep),
+    index("idx_sep_status").on(table.status),
+  ]
 );
 
 /**
@@ -241,11 +228,7 @@ export const bpjsRujukan = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Rujukan fields
     patientId: uuid("patient_id")
@@ -275,13 +258,13 @@ export const bpjsRujukan = pgTable(
     }),
     apiResponse: jsonb("api_response").$type<Record<string, any>>(),
   },
-  (table) => ({
-    noRujukanIdx: index("idx_rujukan_no").on(table.noRujukan),
-    patientIdIdx: index("idx_rujukan_patient").on(table.patientId),
-    encounterIdIdx: index("idx_rujukan_encounter").on(table.encounterId),
-    statusIdx: index("idx_rujukan_status").on(table.status),
-    masaBerlakuIdx: index("idx_rujukan_valid").on(table.masaBerlaku),
-  })
+  (table) => [
+    index("idx_rujukan_no").on(table.noRujukan),
+    index("idx_rujukan_patient").on(table.patientId),
+    index("idx_rujukan_encounter").on(table.encounterId),
+    index("idx_rujukan_status").on(table.status),
+    index("idx_rujukan_valid").on(table.masaBerlaku),
+  ]
 );
 
 /**
@@ -300,11 +283,7 @@ export const bpjsAntrean = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Antrean fields
     patientId: uuid("patient_id").references(() => patients.id, {
@@ -343,13 +322,13 @@ export const bpjsAntrean = pgTable(
     waktuTask6: timestamp("waktu_task_6"), // Pharmacy start
     waktuTask7: timestamp("waktu_task_7"), // Complete
   },
-  (table) => ({
-    kodeBookingIdx: uniqueIndex("idx_antrean_booking").on(table.kodeBooking),
-    patientIdIdx: index("idx_antrean_patient").on(table.patientId),
-    encounterIdIdx: index("idx_antrean_encounter").on(table.encounterId),
-    tanggalPeriksaIdx: index("idx_antrean_date").on(table.tanggalPeriksa),
-    statusIdx: index("idx_antrean_status").on(table.status),
-  })
+  (table) => [
+    uniqueIndex("idx_antrean_booking").on(table.kodeBooking),
+    index("idx_antrean_patient").on(table.patientId),
+    index("idx_antrean_encounter").on(table.encounterId),
+    index("idx_antrean_date").on(table.tanggalPeriksa),
+    index("idx_antrean_status").on(table.status),
+  ]
 );
 
 /**
@@ -368,11 +347,7 @@ export const bpjsInacbgClaims = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // INA-CBG claim fields
     admissionId: uuid("admission_id")
@@ -425,12 +400,12 @@ export const bpjsInacbgClaims = pgTable(
     rejectionReason: text("rejection_reason"),
     apiResponse: jsonb("api_response").$type<Record<string, any>>(),
   },
-  (table) => ({
-    admissionIdIdx: index("idx_claim_admission").on(table.admissionId),
-    sepIdIdx: index("idx_claim_sep").on(table.sepId),
-    noSepIdx: index("idx_claim_no_sep").on(table.noSep),
-    grouperStatusIdx: index("idx_claim_status").on(table.grouperStatus),
-  })
+  (table) => [
+    index("idx_claim_admission").on(table.admissionId),
+    index("idx_claim_sep").on(table.sepId),
+    index("idx_claim_no_sep").on(table.noSep),
+    index("idx_claim_status").on(table.grouperStatus),
+  ]
 );
 
 // ============================================================================

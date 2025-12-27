@@ -22,6 +22,7 @@ import {
   satusehatConsentMethodEnum,
   satusehatLookupStatusEnum,
   satusehatVerificationMethodEnum,
+  BsonResource,
 } from "./core";
 import { organizations } from "./organization";
 import { polyclinics } from "./practitioners";
@@ -50,11 +51,7 @@ export const satusehatConfigs = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Configuration fields
     organizationId: uuid("organization_id")
@@ -74,12 +71,10 @@ export const satusehatConfigs = pgTable(
     lastSyncAt: timestamp("last_sync_at"),
     lastError: text("last_error"),
   },
-  (table) => ({
-    orgIdIdx: index("idx_satusehat_config_org").on(table.organizationId),
-    orgIdUnique: uniqueIndex("idx_satusehat_config_org_unique").on(
-      table.organizationId
-    ),
-  })
+  (table) => [
+    index("idx_satusehat_config_org").on(table.organizationId),
+    uniqueIndex("idx_satusehat_config_org_unique").on(table.organizationId),
+  ]
 );
 
 /**
@@ -98,11 +93,7 @@ export const satusehatLocations = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Location mapping fields
     polyclinicId: uuid("polyclinic_id")
@@ -116,17 +107,11 @@ export const satusehatLocations = pgTable(
     syncedAt: timestamp("synced_at").notNull(),
     status: satusehatSyncStatusEnum("status").notNull().default("completed"),
   },
-  (table) => ({
-    polyclinicIdIdx: index("idx_satusehat_location_poli").on(
-      table.polyclinicId
-    ),
-    polyclinicIdUnique: uniqueIndex("idx_satusehat_location_poli_unique").on(
-      table.polyclinicId
-    ),
-    satusehatLocationIdIdx: index("idx_satusehat_location_id").on(
-      table.satusehatLocationId
-    ),
-  })
+  (table) => [
+    index("idx_satusehat_location_poli").on(table.polyclinicId),
+    uniqueIndex("idx_satusehat_location_poli_unique").on(table.polyclinicId),
+    index("idx_satusehat_location_id").on(table.satusehatLocationId),
+  ]
 );
 
 /**
@@ -145,11 +130,7 @@ export const satusehatPractitioners = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Practitioner mapping fields
     practitionerId: uuid("practitioner_id")
@@ -164,16 +145,12 @@ export const satusehatPractitioners = pgTable(
     ).notNull(),
     status: satusehatSyncStatusEnum("status").notNull().default("completed"),
   },
-  (table) => ({
-    practitionerIdIdx: index("idx_satusehat_pract_local").on(
-      table.practitionerId
-    ),
-    practitionerIdUnique: uniqueIndex("idx_satusehat_pract_local_unique").on(
-      table.practitionerId
-    ),
-    ihsNumberIdx: index("idx_satusehat_pract_ihs").on(table.ihsNumber),
-    nikIdx: index("idx_satusehat_pract_nik").on(table.nik),
-  })
+  (table) => [
+    index("idx_satusehat_pract_local").on(table.practitionerId),
+    uniqueIndex("idx_satusehat_pract_local_unique").on(table.practitionerId),
+    index("idx_satusehat_pract_ihs").on(table.ihsNumber),
+    index("idx_satusehat_pract_nik").on(table.nik),
+  ]
 );
 
 /**
@@ -192,11 +169,7 @@ export const patientIhsLookups = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Patient IHS lookup fields
     patientId: uuid("patient_id")
@@ -218,11 +191,11 @@ export const patientIhsLookups = pgTable(
       onDelete: "set null",
     }),
   },
-  (table) => ({
-    patientIdIdx: index("idx_patient_ihs_patient").on(table.patientId),
-    nikIdx: index("idx_patient_ihs_nik").on(table.nik),
-    lookupStatusIdx: index("idx_patient_ihs_status").on(table.lookupStatus),
-  })
+  (table) => [
+    index("idx_patient_ihs_patient").on(table.patientId),
+    index("idx_patient_ihs_nik").on(table.nik),
+    index("idx_patient_ihs_status").on(table.lookupStatus),
+  ]
 );
 
 /**
@@ -241,11 +214,7 @@ export const satusehatSyncQueue = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Sync queue fields
     resourceType: satusehatResourceTypeEnum("resource_type").notNull(),
@@ -268,19 +237,13 @@ export const satusehatSyncQueue = pgTable(
     startedAt: timestamp("started_at"),
     completedAt: timestamp("completed_at"),
   },
-  (table) => ({
-    statusIdx: index("idx_sync_queue_status").on(table.status),
-    encounterIdIdx: index("idx_sync_queue_encounter").on(table.encounterId),
-    resourceIdx: index("idx_sync_queue_resource").on(
-      table.resourceType,
-      table.resourceId
-    ),
-    retryIdx: index("idx_sync_queue_retry").on(table.status, table.nextRetryAt),
-    priorityIdx: index("idx_sync_queue_priority").on(
-      table.priority,
-      table.status
-    ),
-  })
+  (table) => [
+    index("idx_sync_queue_status").on(table.status),
+    index("idx_sync_queue_encounter").on(table.encounterId),
+    index("idx_sync_queue_resource").on(table.resourceType, table.resourceId),
+    index("idx_sync_queue_retry").on(table.status, table.nextRetryAt),
+    index("idx_sync_queue_priority").on(table.priority, table.status),
+  ]
 );
 
 /**
@@ -299,11 +262,7 @@ export const satusehatErrorLogs = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Error log fields
     syncQueueId: uuid("sync_queue_id").references(() => satusehatSyncQueue.id, {
@@ -330,12 +289,12 @@ export const satusehatErrorLogs = pgTable(
     resolvedAt: timestamp("resolved_at"),
     timestamp: timestamp("timestamp").notNull(),
   },
-  (table) => ({
-    syncQueueIdIdx: index("idx_error_log_queue").on(table.syncQueueId),
-    categoryIdx: index("idx_error_log_category").on(table.errorCategory),
-    statusIdx: index("idx_error_log_status").on(table.resolutionStatus),
-    timestampIdx: index("idx_error_log_timestamp").on(table.timestamp),
-  })
+  (table) => [
+    index("idx_error_log_queue").on(table.syncQueueId),
+    index("idx_error_log_category").on(table.errorCategory),
+    index("idx_error_log_status").on(table.resolutionStatus),
+    index("idx_error_log_timestamp").on(table.timestamp),
+  ]
 );
 
 /**
@@ -354,11 +313,7 @@ export const satusehatConsents = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Consent fields
     patientId: uuid("patient_id")
@@ -378,11 +333,11 @@ export const satusehatConsents = pgTable(
     revokedAt: timestamp("revoked_at"),
     revokedReason: text("revoked_reason"),
   },
-  (table) => ({
-    patientIdIdx: index("idx_consent_patient").on(table.patientId),
-    validIdx: index("idx_consent_valid").on(table.validFrom, table.validUntil),
-    revokedIdx: index("idx_consent_revoked").on(table.revoked),
-  })
+  (table) => [
+    index("idx_consent_patient").on(table.patientId),
+    index("idx_consent_valid").on(table.validFrom, table.validUntil),
+    index("idx_consent_revoked").on(table.revoked),
+  ]
 );
 
 // ============================================================================

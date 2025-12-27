@@ -24,6 +24,7 @@ import {
   labResultStatusEnum,
   diagnosticReportStatusEnum,
   criticalNotificationMethodEnum,
+  BsonResource,
 } from "./core";
 import { organizations } from "./organization";
 import { users } from "./users";
@@ -52,11 +53,7 @@ export const labTests = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Lab test fields
     organizationId: uuid("organization_id")
@@ -100,14 +97,14 @@ export const labTests = pgTable(
     panelTests: jsonb("panel_tests").$type<string[]>(),
     isActive: boolean("is_active").default(true),
   },
-  (table) => ({
-    orgIdIdx: index("idx_lab_test_org_id").on(table.organizationId),
-    branchIdIdx: index("idx_lab_test_branch_id").on(table.branchId),
-    testCodeIdx: uniqueIndex("idx_lab_test_code").on(table.testCode),
-    loincCodeIdx: index("idx_lab_test_loinc").on(table.loincCode),
-    categoryIdx: index("idx_lab_test_category").on(table.category),
-    isActiveIdx: index("idx_lab_test_active").on(table.isActive),
-  })
+  (table) => [
+    index("idx_lab_test_org_id").on(table.organizationId),
+    index("idx_lab_test_branch_id").on(table.branchId),
+    uniqueIndex("idx_lab_test_code").on(table.testCode),
+    index("idx_lab_test_loinc").on(table.loincCode),
+    index("idx_lab_test_category").on(table.category),
+    index("idx_lab_test_active").on(table.isActive),
+  ]
 );
 
 /**
@@ -126,11 +123,7 @@ export const labTestReferenceRanges = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Reference range fields
     labTestId: uuid("lab_test_id")
@@ -145,15 +138,15 @@ export const labTestReferenceRanges = pgTable(
     criticalHigh: varchar("critical_high", { length: 20 }),
     interpretationGuide: text("interpretation_guide"),
   },
-  (table) => ({
-    labTestIdIdx: index("idx_ref_range_lab_test_id").on(table.labTestId),
-    genderAgeIdx: index("idx_ref_range_gender_age").on(
+  (table) => [
+    index("idx_ref_range_lab_test_id").on(table.labTestId),
+    index("idx_ref_range_gender_age").on(
       table.labTestId,
       table.gender,
       table.ageMinYears,
       table.ageMaxYears
     ),
-  })
+  ]
 );
 
 /**
@@ -172,11 +165,7 @@ export const labQueue = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Queue fields
     organizationId: uuid("organization_id")
@@ -222,14 +211,14 @@ export const labQueue = pgTable(
     collectionPoint: varchar("collection_point", { length: 20 }).default("lab"),
     notes: text("notes"),
   },
-  (table) => ({
-    orgIdIdx: index("idx_lab_queue_org_id").on(table.organizationId),
-    branchIdIdx: index("idx_lab_queue_branch_id").on(table.branchId),
-    labOrderIdIdx: index("idx_lab_queue_order_id").on(table.labOrderId),
-    patientIdIdx: index("idx_lab_queue_patient_id").on(table.patientId),
-    queueDateIdx: index("idx_lab_queue_date").on(table.queueDate),
-    statusIdx: index("idx_lab_queue_status").on(table.status),
-  })
+  (table) => [
+    index("idx_lab_queue_org_id").on(table.organizationId),
+    index("idx_lab_queue_branch_id").on(table.branchId),
+    index("idx_lab_queue_order_id").on(table.labOrderId),
+    index("idx_lab_queue_patient_id").on(table.patientId),
+    index("idx_lab_queue_date").on(table.queueDate),
+    index("idx_lab_queue_status").on(table.status),
+  ]
 );
 
 /**
@@ -248,11 +237,7 @@ export const labOrders = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Lab order fields
     organizationId: uuid("organization_id")
@@ -276,13 +261,13 @@ export const labOrders = pgTable(
     clinicalInfo: text("clinical_info"),
     notes: text("notes"),
   },
-  (table) => ({
-    orgIdIdx: index("idx_lab_order_org_id").on(table.organizationId),
-    branchIdIdx: index("idx_lab_order_branch_id").on(table.branchId),
-    patientIdIdx: index("idx_lab_order_patient_id").on(table.patientId),
-    encounterIdIdx: index("idx_lab_order_encounter_id").on(table.encounterId),
-    orderNumberIdx: uniqueIndex("idx_lab_order_number").on(table.orderNumber),
-  })
+  (table) => [
+    index("idx_lab_order_org_id").on(table.organizationId),
+    index("idx_lab_order_branch_id").on(table.branchId),
+    index("idx_lab_order_patient_id").on(table.patientId),
+    index("idx_lab_order_encounter_id").on(table.encounterId),
+    uniqueIndex("idx_lab_order_number").on(table.orderNumber),
+  ]
 );
 
 /**
@@ -301,11 +286,7 @@ export const labOrderItems = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Lab order item fields
     labOrderId: uuid("lab_order_id")
@@ -320,11 +301,7 @@ export const labOrderItems = pgTable(
     priority: varchar("priority", { length: 20 }),
     notes: text("notes"),
   },
-  (table) => ({
-    labOrderIdIdx: index("idx_lab_order_item_lab_order_id").on(
-      table.labOrderId
-    ),
-  })
+  (table) => [index("idx_lab_order_item_lab_order_id").on(table.labOrderId)]
 );
 
 /**
@@ -343,11 +320,7 @@ export const specimens = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Specimen fields
     organizationId: uuid("organization_id")
@@ -393,16 +366,14 @@ export const specimens = pgTable(
     satusehatSpecimenId: varchar("satusehat_specimen_id", { length: 100 }),
     notes: text("notes"),
   },
-  (table) => ({
-    orgIdIdx: index("idx_specimen_org_id").on(table.organizationId),
-    branchIdIdx: index("idx_specimen_branch_id").on(table.branchId),
-    labOrderIdIdx: index("idx_specimen_lab_order_id").on(table.labOrderId),
-    specimenNumberIdx: uniqueIndex("idx_specimen_number").on(
-      table.specimenNumber
-    ),
-    patientIdIdx: index("idx_specimen_patient_id").on(table.patientId),
-    statusIdx: index("idx_specimen_status").on(table.status),
-  })
+  (table) => [
+    index("idx_specimen_org_id").on(table.organizationId),
+    index("idx_specimen_branch_id").on(table.branchId),
+    index("idx_specimen_lab_order_id").on(table.labOrderId),
+    uniqueIndex("idx_specimen_number").on(table.specimenNumber),
+    index("idx_specimen_patient_id").on(table.patientId),
+    index("idx_specimen_status").on(table.status),
+  ]
 );
 
 /**
@@ -421,11 +392,7 @@ export const labResults = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Lab result fields
     organizationId: uuid("organization_id")
@@ -486,19 +453,19 @@ export const labResults = pgTable(
       length: 100,
     }),
   },
-  (table) => ({
-    orgIdIdx: index("idx_lab_result_org_id").on(table.organizationId),
-    branchIdIdx: index("idx_lab_result_branch_id").on(table.branchId),
-    labOrderIdIdx: index("idx_lab_result_lab_order_id").on(table.labOrderId),
-    specimenIdIdx: index("idx_lab_result_specimen_id").on(table.specimenId),
-    patientIdIdx: index("idx_lab_result_patient_id").on(table.patientId),
-    isCriticalIdx: index("idx_lab_result_critical").on(table.isCritical),
-    criticalNotifiedIdx: index("idx_lab_result_critical_notified").on(
+  (table) => [
+    index("idx_lab_result_org_id").on(table.organizationId),
+    index("idx_lab_result_branch_id").on(table.branchId),
+    index("idx_lab_result_lab_order_id").on(table.labOrderId),
+    index("idx_lab_result_specimen_id").on(table.specimenId),
+    index("idx_lab_result_patient_id").on(table.patientId),
+    index("idx_lab_result_critical").on(table.isCritical),
+    index("idx_lab_result_critical_notified").on(
       table.isCritical,
       table.criticalNotified
     ),
-    statusIdx: index("idx_lab_result_status").on(table.status),
-  })
+    index("idx_lab_result_status").on(table.status),
+  ]
 );
 
 /**
@@ -517,11 +484,7 @@ export const diagnosticReports = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Diagnostic report fields
     organizationId: uuid("organization_id")
@@ -566,17 +529,13 @@ export const diagnosticReports = pgTable(
     }),
     notes: text("notes"),
   },
-  (table) => ({
-    orgIdIdx: index("idx_diagnostic_report_org_id").on(table.organizationId),
-    branchIdIdx: index("idx_diagnostic_report_branch_id").on(table.branchId),
-    labOrderIdIdx: index("idx_diagnostic_report_lab_order_id").on(
-      table.labOrderId
-    ),
-    patientIdIdx: index("idx_diagnostic_report_patient_id").on(table.patientId),
-    reportNumberIdx: uniqueIndex("idx_diagnostic_report_number").on(
-      table.reportNumber
-    ),
-  })
+  (table) => [
+    index("idx_diagnostic_report_org_id").on(table.organizationId),
+    index("idx_diagnostic_report_branch_id").on(table.branchId),
+    index("idx_diagnostic_report_lab_order_id").on(table.labOrderId),
+    index("idx_diagnostic_report_patient_id").on(table.patientId),
+    uniqueIndex("idx_diagnostic_report_number").on(table.reportNumber),
+  ]
 );
 
 /**
@@ -595,11 +554,7 @@ export const criticalValueNotifications = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Critical notification fields
     labResultId: uuid("lab_result_id")
@@ -623,15 +578,11 @@ export const criticalValueNotifications = pgTable(
     acknowledgedAt: timestamp("acknowledged_at"),
     actionTaken: text("action_taken"),
   },
-  (table) => ({
-    labResultIdIdx: index("idx_critical_notif_lab_result_id").on(
-      table.labResultId
-    ),
-    patientIdIdx: index("idx_critical_notif_patient_id").on(table.patientId),
-    notificationTimeIdx: index("idx_critical_notif_time").on(
-      table.notificationTime
-    ),
-  })
+  (table) => [
+    index("idx_critical_notif_lab_result_id").on(table.labResultId),
+    index("idx_critical_notif_patient_id").on(table.patientId),
+    index("idx_critical_notif_time").on(table.notificationTime),
+  ]
 );
 
 // ============================================================================

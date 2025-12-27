@@ -27,6 +27,7 @@ import {
   cashClosingShiftEnum,
   cashClosingStatusEnum,
   varianceStatusEnum,
+  BsonResource,
 } from "./core";
 import { organizations } from "./organization";
 import { users } from "./users";
@@ -56,11 +57,7 @@ export const serviceTariffs = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Tariff fields
     organizationId: uuid("organization_id")
@@ -93,19 +90,17 @@ export const serviceTariffs = pgTable(
     effectiveUntil: date("effective_until"),
     isActive: boolean("is_active").default(true),
   },
-  (table) => ({
-    orgIdIdx: index("idx_service_tariff_org_id").on(table.organizationId),
-    branchIdIdx: index("idx_service_tariff_branch_id").on(table.branchId),
-    serviceCodeIdx: uniqueIndex("idx_service_tariff_code").on(
-      table.serviceCode
-    ),
-    categoryIdx: index("idx_service_tariff_category").on(table.category),
-    effectiveIdx: index("idx_service_tariff_effective").on(
+  (table) => [
+    index("idx_service_tariff_org_id").on(table.organizationId),
+    index("idx_service_tariff_branch_id").on(table.branchId),
+    uniqueIndex("idx_service_tariff_code").on(table.serviceCode),
+    index("idx_service_tariff_category").on(table.category),
+    index("idx_service_tariff_effective").on(
       table.effectiveFrom,
       table.effectiveUntil
     ),
-    isActiveIdx: index("idx_service_tariff_active").on(table.isActive),
-  })
+    index("idx_service_tariff_active").on(table.isActive),
+  ]
 );
 
 /**
@@ -124,11 +119,7 @@ export const tariffClasses = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Tariff class fields
     organizationId: uuid("organization_id")
@@ -143,11 +134,11 @@ export const tariffClasses = pgTable(
     isDefault: boolean("is_default").default(false),
     isActive: boolean("is_active").default(true),
   },
-  (table) => ({
-    orgIdIdx: index("idx_tariff_class_org_id").on(table.organizationId),
-    branchIdIdx: index("idx_tariff_class_branch_id").on(table.branchId),
-    classCodeIdx: uniqueIndex("idx_tariff_class_code").on(table.classCode),
-  })
+  (table) => [
+    index("idx_tariff_class_org_id").on(table.organizationId),
+    index("idx_tariff_class_branch_id").on(table.branchId),
+    uniqueIndex("idx_tariff_class_code").on(table.classCode),
+  ]
 );
 
 /**
@@ -166,11 +157,7 @@ export const charges = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Charge fields
     organizationId: uuid("organization_id")
@@ -217,15 +204,15 @@ export const charges = pgTable(
       .references(() => users.id, { onDelete: "set null" }),
     notes: text("notes"),
   },
-  (table) => ({
-    orgIdIdx: index("idx_charge_org_id").on(table.organizationId),
-    branchIdIdx: index("idx_charge_branch_id").on(table.branchId),
-    patientIdIdx: index("idx_charge_patient_id").on(table.patientId),
-    encounterIdIdx: index("idx_charge_encounter_id").on(table.encounterId),
-    serviceIdIdx: index("idx_charge_service_id").on(table.serviceId),
-    statusIdx: index("idx_charge_status").on(table.status),
-    chargeDateIdx: index("idx_charge_date").on(table.chargeDate),
-  })
+  (table) => [
+    index("idx_charge_org_id").on(table.organizationId),
+    index("idx_charge_branch_id").on(table.branchId),
+    index("idx_charge_patient_id").on(table.patientId),
+    index("idx_charge_encounter_id").on(table.encounterId),
+    index("idx_charge_service_id").on(table.serviceId),
+    index("idx_charge_status").on(table.status),
+    index("idx_charge_date").on(table.chargeDate),
+  ]
 );
 
 /**
@@ -244,11 +231,7 @@ export const chargeAdjustments = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Adjustment fields
     chargeId: uuid("charge_id")
@@ -264,9 +247,7 @@ export const chargeAdjustments = pgTable(
       .references(() => users.id, { onDelete: "set null" }),
     adjustedAt: timestamp("adjusted_at").notNull(),
   },
-  (table) => ({
-    chargeIdIdx: index("idx_charge_adjustment_charge_id").on(table.chargeId),
-  })
+  (table) => [index("idx_charge_adjustment_charge_id").on(table.chargeId)]
 );
 
 /**
@@ -285,11 +266,7 @@ export const invoices = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Invoice fields
     organizationId: uuid("organization_id")
@@ -333,15 +310,15 @@ export const invoices = pgTable(
     }),
     notes: text("notes"),
   },
-  (table) => ({
-    orgIdIdx: index("idx_invoice_org_id").on(table.organizationId),
-    branchIdIdx: index("idx_invoice_branch_id").on(table.branchId),
-    patientIdIdx: index("idx_invoice_patient_id").on(table.patientId),
-    encounterIdIdx: index("idx_invoice_encounter_id").on(table.encounterId),
-    invoiceNumberIdx: uniqueIndex("idx_invoice_number").on(table.invoiceNumber),
-    statusIdx: index("idx_invoice_status").on(table.status),
-    invoiceDateIdx: index("idx_invoice_date").on(table.invoiceDate),
-  })
+  (table) => [
+    index("idx_invoice_org_id").on(table.organizationId),
+    index("idx_invoice_branch_id").on(table.branchId),
+    index("idx_invoice_patient_id").on(table.patientId),
+    index("idx_invoice_encounter_id").on(table.encounterId),
+    uniqueIndex("idx_invoice_number").on(table.invoiceNumber),
+    index("idx_invoice_status").on(table.status),
+    index("idx_invoice_date").on(table.invoiceDate),
+  ]
 );
 
 /**
@@ -360,11 +337,7 @@ export const invoiceItems = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Invoice item fields
     invoiceId: uuid("invoice_id")
@@ -383,10 +356,10 @@ export const invoiceItems = pgTable(
     bpjsClaimAmount: varchar("bpjs_claim_amount", { length: 20 }),
     patientPortion: varchar("patient_portion", { length: 20 }),
   },
-  (table) => ({
-    invoiceIdIdx: index("idx_invoice_item_invoice_id").on(table.invoiceId),
-    chargeIdIdx: index("idx_invoice_item_charge_id").on(table.chargeId),
-  })
+  (table) => [
+    index("idx_invoice_item_invoice_id").on(table.invoiceId),
+    index("idx_invoice_item_charge_id").on(table.chargeId),
+  ]
 );
 
 /**
@@ -405,11 +378,7 @@ export const payments = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Payment fields
     organizationId: uuid("organization_id")
@@ -434,15 +403,15 @@ export const payments = pgTable(
     paymentDate: timestamp("payment_date").notNull(),
     notes: text("notes"),
   },
-  (table) => ({
-    orgIdIdx: index("idx_payment_org_id").on(table.organizationId),
-    branchIdIdx: index("idx_payment_branch_id").on(table.branchId),
-    invoiceIdIdx: index("idx_payment_invoice_id").on(table.invoiceId),
-    patientIdIdx: index("idx_payment_patient_id").on(table.patientId),
-    paymentNumberIdx: uniqueIndex("idx_payment_number").on(table.paymentNumber),
-    paymentDateIdx: index("idx_payment_date").on(table.paymentDate),
-    statusIdx: index("idx_payment_status").on(table.status),
-  })
+  (table) => [
+    index("idx_payment_org_id").on(table.organizationId),
+    index("idx_payment_branch_id").on(table.branchId),
+    index("idx_payment_invoice_id").on(table.invoiceId),
+    index("idx_payment_patient_id").on(table.patientId),
+    uniqueIndex("idx_payment_number").on(table.paymentNumber),
+    index("idx_payment_date").on(table.paymentDate),
+    index("idx_payment_status").on(table.status),
+  ]
 );
 
 /**
@@ -461,11 +430,7 @@ export const paymentItems = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Payment item fields
     paymentId: uuid("payment_id")
@@ -488,9 +453,7 @@ export const paymentItems = pgTable(
       onDelete: "set null",
     }),
   },
-  (table) => ({
-    paymentIdIdx: index("idx_payment_item_payment_id").on(table.paymentId),
-  })
+  (table) => [index("idx_payment_item_payment_id").on(table.paymentId)]
 );
 
 /**
@@ -509,11 +472,7 @@ export const deposits = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Deposit fields
     organizationId: uuid("organization_id")
@@ -542,13 +501,13 @@ export const deposits = pgTable(
     refundId: uuid("refund_id"),
     notes: text("notes"),
   },
-  (table) => ({
-    orgIdIdx: index("idx_deposit_org_id").on(table.organizationId),
-    branchIdIdx: index("idx_deposit_branch_id").on(table.branchId),
-    patientIdIdx: index("idx_deposit_patient_id").on(table.patientId),
-    depositNumberIdx: uniqueIndex("idx_deposit_number").on(table.depositNumber),
-    statusIdx: index("idx_deposit_status").on(table.status),
-  })
+  (table) => [
+    index("idx_deposit_org_id").on(table.organizationId),
+    index("idx_deposit_branch_id").on(table.branchId),
+    index("idx_deposit_patient_id").on(table.patientId),
+    uniqueIndex("idx_deposit_number").on(table.depositNumber),
+    index("idx_deposit_status").on(table.status),
+  ]
 );
 
 /**
@@ -567,11 +526,7 @@ export const refunds = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Refund fields
     organizationId: uuid("organization_id")
@@ -607,13 +562,13 @@ export const refunds = pgTable(
     }),
     notes: text("notes"),
   },
-  (table) => ({
-    orgIdIdx: index("idx_refund_org_id").on(table.organizationId),
-    branchIdIdx: index("idx_refund_branch_id").on(table.branchId),
-    patientIdIdx: index("idx_refund_patient_id").on(table.patientId),
-    refundNumberIdx: uniqueIndex("idx_refund_number").on(table.refundNumber),
-    statusIdx: index("idx_refund_status").on(table.status),
-  })
+  (table) => [
+    index("idx_refund_org_id").on(table.organizationId),
+    index("idx_refund_branch_id").on(table.branchId),
+    index("idx_refund_patient_id").on(table.patientId),
+    uniqueIndex("idx_refund_number").on(table.refundNumber),
+    index("idx_refund_status").on(table.status),
+  ]
 );
 
 /**
@@ -632,11 +587,7 @@ export const cashClosings = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Cash closing fields
     organizationId: uuid("organization_id")
@@ -676,15 +627,13 @@ export const cashClosings = pgTable(
     status: cashClosingStatusEnum("status").default("pending"),
     notes: text("notes"),
   },
-  (table) => ({
-    orgIdIdx: index("idx_cash_closing_org_id").on(table.organizationId),
-    branchIdIdx: index("idx_cash_closing_branch_id").on(table.branchId),
-    closingNumberIdx: uniqueIndex("idx_cash_closing_number").on(
-      table.closingNumber
-    ),
-    closingDateIdx: index("idx_cash_closing_date").on(table.closingDate),
-    statusIdx: index("idx_cash_closing_status").on(table.status),
-  })
+  (table) => [
+    index("idx_cash_closing_org_id").on(table.organizationId),
+    index("idx_cash_closing_branch_id").on(table.branchId),
+    uniqueIndex("idx_cash_closing_number").on(table.closingNumber),
+    index("idx_cash_closing_date").on(table.closingDate),
+    index("idx_cash_closing_status").on(table.status),
+  ]
 );
 
 // ============================================================================

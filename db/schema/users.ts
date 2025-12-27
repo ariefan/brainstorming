@@ -10,7 +10,7 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-import { roleEnum, genderEnum, userStatusEnum } from "./core";
+import { roleEnum, genderEnum, userStatusEnum, BsonResource } from "./core";
 import { organizations } from "./organization";
 
 // ============================================================================
@@ -33,11 +33,7 @@ export const users = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // User fields
     organizationId: uuid("organization_id")
@@ -85,17 +81,15 @@ export const users = pgTable(
     }>(),
     practitionerId: uuid("practitioner_id"), // Link to practitioner if applicable
   },
-  (table) => ({
-    orgIdIdx: index("idx_user_org_id").on(table.organizationId),
-    branchIdIdx: index("idx_user_branch_id").on(table.branchId),
-    usernameIdx: uniqueIndex("idx_user_username").on(table.username),
-    emailIdx: uniqueIndex("idx_user_email").on(table.email),
-    roleIdx: index("idx_user_role").on(table.role),
-    statusIdx: index("idx_user_status").on(table.status),
-    practitionerIdIdx: index("idx_user_practitioner_id").on(
-      table.practitionerId
-    ),
-  })
+  (table) => [
+    index("idx_user_org_id").on(table.organizationId),
+    index("idx_user_branch_id").on(table.branchId),
+    uniqueIndex("idx_user_username").on(table.username),
+    uniqueIndex("idx_user_email").on(table.email),
+    index("idx_user_role").on(table.role),
+    index("idx_user_status").on(table.status),
+    index("idx_user_practitioner_id").on(table.practitionerId),
+  ]
 );
 
 /**
@@ -114,11 +108,7 @@ export const userInvitations = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Invitation fields
     organizationId: uuid("organization_id")
@@ -139,14 +129,14 @@ export const userInvitations = pgTable(
     status: varchar("status", { length: 20 }).default("pending"), // pending, accepted, expired, cancelled
     message: text("message"),
   },
-  (table) => ({
-    orgIdIdx: index("idx_invitation_org_id").on(table.organizationId),
-    branchIdIdx: index("idx_invitation_branch_id").on(table.branchId),
-    emailIdx: index("idx_invitation_email").on(table.email),
-    tokenIdx: uniqueIndex("idx_invitation_token").on(table.token),
-    statusIdx: index("idx_invitation_status").on(table.status),
-    expiresAtIdx: index("idx_invitation_expires_at").on(table.expiresAt),
-  })
+  (table) => [
+    index("idx_invitation_org_id").on(table.organizationId),
+    index("idx_invitation_branch_id").on(table.branchId),
+    index("idx_invitation_email").on(table.email),
+    uniqueIndex("idx_invitation_token").on(table.token),
+    index("idx_invitation_status").on(table.status),
+    index("idx_invitation_expires_at").on(table.expiresAt),
+  ]
 );
 
 /**
@@ -162,11 +152,7 @@ export const userSessions = pgTable(
     deletedAt: timestamp("deleted_at"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Session fields
     userId: uuid("user_id")
@@ -196,17 +182,15 @@ export const userSessions = pgTable(
     lastActivityAt: timestamp("last_activity_at").defaultNow(),
     isActive: boolean("is_active").default(true),
   },
-  (table) => ({
-    userIdIdx: index("idx_session_user_id").on(table.userId),
-    orgIdIdx: index("idx_session_org_id").on(table.organizationId),
-    branchIdIdx: index("idx_session_branch_id").on(table.branchId),
-    tokenIdx: uniqueIndex("idx_session_token").on(table.token),
-    refreshTokenIdx: uniqueIndex("idx_session_refresh_token").on(
-      table.refreshToken
-    ),
-    expiresAtIdx: index("idx_session_expires_at").on(table.expiresAt),
-    isActiveIdx: index("idx_session_active").on(table.isActive),
-  })
+  (table) => [
+    index("idx_session_user_id").on(table.userId),
+    index("idx_session_org_id").on(table.organizationId),
+    index("idx_session_branch_id").on(table.branchId),
+    uniqueIndex("idx_session_token").on(table.token),
+    uniqueIndex("idx_session_refresh_token").on(table.refreshToken),
+    index("idx_session_expires_at").on(table.expiresAt),
+    index("idx_session_active").on(table.isActive),
+  ]
 );
 
 /**
@@ -225,11 +209,7 @@ export const userBranches = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // User-branch assignment fields
     userId: uuid("user_id")
@@ -247,15 +227,12 @@ export const userBranches = pgTable(
       customPermissions?: string[];
     }>(),
   },
-  (table) => ({
-    userIdIdx: index("idx_user_branch_user_id").on(table.userId),
-    branchIdIdx: index("idx_user_branch_branch_id").on(table.branchId),
-    userBranchIdx: uniqueIndex("idx_user_branch_unique").on(
-      table.userId,
-      table.branchId
-    ),
-    isPrimaryIdx: index("idx_user_branch_primary").on(table.isPrimary),
-  })
+  (table) => [
+    index("idx_user_branch_user_id").on(table.userId),
+    index("idx_user_branch_branch_id").on(table.branchId),
+    uniqueIndex("idx_user_branch_unique").on(table.userId, table.branchId),
+    index("idx_user_branch_primary").on(table.isPrimary),
+  ]
 );
 
 /**
@@ -269,11 +246,7 @@ export const auditLogs = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Audit fields
     organizationId: uuid("organization_id").references(() => organizations.id, {
@@ -297,15 +270,15 @@ export const auditLogs = pgTable(
     userAgent: text("user_agent"),
     metadata: jsonb("metadata").$type<Record<string, any>>(),
   },
-  (table) => ({
-    orgIdIdx: index("idx_audit_org_id").on(table.organizationId),
-    branchIdIdx: index("idx_audit_branch_id").on(table.branchId),
-    userIdIdx: index("idx_audit_user_id").on(table.userId),
-    actionIdx: index("idx_audit_action").on(table.action),
-    entityTypeIdx: index("idx_audit_entity_type").on(table.entityType),
-    entityIdIdx: index("idx_audit_entity_id").on(table.entityId),
-    createdAtIdx: index("idx_audit_created_at").on(table.createdAt),
-  })
+  (table) => [
+    index("idx_audit_org_id").on(table.organizationId),
+    index("idx_audit_branch_id").on(table.branchId),
+    index("idx_audit_user_id").on(table.userId),
+    index("idx_audit_action").on(table.action),
+    index("idx_audit_entity_type").on(table.entityType),
+    index("idx_audit_entity_id").on(table.entityId),
+    index("idx_audit_created_at").on(table.createdAt),
+  ]
 );
 
 // ============================================================================

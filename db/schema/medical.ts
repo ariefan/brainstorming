@@ -21,6 +21,7 @@ import {
   prescriptionStatusEnum,
   dosageFormEnum,
   frequencyEnum,
+  BsonResource,
 } from "./core";
 import { organizations } from "./organization";
 import { users } from "./users";
@@ -49,11 +50,7 @@ export const encounters = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Encounter fields
     organizationId: uuid("organization_id")
@@ -101,25 +98,17 @@ export const encounters = pgTable(
     bpjsSepNumber: varchar("bpjs_sep_number", { length: 30 }),
     notes: text("notes"),
   },
-  (table) => ({
-    orgIdIdx: index("idx_encounter_org_id").on(table.organizationId),
-    branchIdIdx: index("idx_encounter_branch_id").on(table.branchId),
-    patientIdIdx: index("idx_encounter_patient_id").on(table.patientId),
-    practitionerIdIdx: index("idx_encounter_practitioner_id").on(
-      table.practitionerId
-    ),
-    polyclinicIdIdx: index("idx_encounter_polyclinic_id").on(
-      table.polyclinicId
-    ),
-    appointmentIdIdx: index("idx_encounter_appointment_id").on(
-      table.appointmentId
-    ),
-    encounterNumberIdx: uniqueIndex("idx_encounter_number").on(
-      table.encounterNumber
-    ),
-    encounterDateIdx: index("idx_encounter_date").on(table.encounterDate),
-    statusIdx: index("idx_encounter_status").on(table.status),
-  })
+  (table) => [
+    index("idx_encounter_org_id").on(table.organizationId),
+    index("idx_encounter_branch_id").on(table.branchId),
+    index("idx_encounter_patient_id").on(table.patientId),
+    index("idx_encounter_practitioner_id").on(table.practitionerId),
+    index("idx_encounter_polyclinic_id").on(table.polyclinicId),
+    index("idx_encounter_appointment_id").on(table.appointmentId),
+    uniqueIndex("idx_encounter_number").on(table.encounterNumber),
+    index("idx_encounter_date").on(table.encounterDate),
+    index("idx_encounter_status").on(table.status),
+  ]
 );
 
 /**
@@ -138,11 +127,7 @@ export const vitalSigns = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Vital signs fields
     encounterId: uuid("encounter_id")
@@ -174,10 +159,10 @@ export const vitalSigns = pgTable(
     >(),
     notes: text("notes"),
   },
-  (table) => ({
-    encounterIdIdx: index("idx_vital_signs_encounter_id").on(table.encounterId),
-    recordedAtIdx: index("idx_vital_signs_recorded_at").on(table.recordedAt),
-  })
+  (table) => [
+    index("idx_vital_signs_encounter_id").on(table.encounterId),
+    index("idx_vital_signs_recorded_at").on(table.recordedAt),
+  ]
 );
 
 /**
@@ -196,11 +181,7 @@ export const consultations = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Consultation fields
     encounterId: uuid("encounter_id")
@@ -221,11 +202,7 @@ export const consultations = pgTable(
     }),
     notes: text("notes"),
   },
-  (table) => ({
-    encounterIdIdx: index("idx_consultation_encounter_id").on(
-      table.encounterId
-    ),
-  })
+  (table) => [index("idx_consultation_encounter_id").on(table.encounterId)]
 );
 
 /**
@@ -244,11 +221,7 @@ export const diagnoses = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Diagnosis fields
     encounterId: uuid("encounter_id")
@@ -267,12 +240,12 @@ export const diagnoses = pgTable(
     notes: text("notes"),
     satusehatConditionId: varchar("satusehat_condition_id", { length: 100 }),
   },
-  (table) => ({
-    encounterIdIdx: index("idx_diagnosis_encounter_id").on(table.encounterId),
-    icd10CodeIdx: index("idx_diagnosis_icd10").on(table.icd10Code),
-    diagnosisTypeIdx: index("idx_diagnosis_type").on(table.diagnosisType),
-    isPrimaryIdx: index("idx_diagnosis_primary").on(table.isPrimary),
-  })
+  (table) => [
+    index("idx_diagnosis_encounter_id").on(table.encounterId),
+    index("idx_diagnosis_icd10").on(table.icd10Code),
+    index("idx_diagnosis_type").on(table.diagnosisType),
+    index("idx_diagnosis_primary").on(table.isPrimary),
+  ]
 );
 
 /**
@@ -291,11 +264,7 @@ export const prescriptions = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Prescription fields
     encounterId: uuid("encounter_id")
@@ -318,15 +287,11 @@ export const prescriptions = pgTable(
       length: 100,
     }),
   },
-  (table) => ({
-    encounterIdIdx: index("idx_prescription_encounter_id").on(
-      table.encounterId
-    ),
-    prescriptionNumberIdx: uniqueIndex("idx_prescription_number").on(
-      table.prescriptionNumber
-    ),
-    statusIdx: index("idx_prescription_status").on(table.status),
-  })
+  (table) => [
+    index("idx_prescription_encounter_id").on(table.encounterId),
+    uniqueIndex("idx_prescription_number").on(table.prescriptionNumber),
+    index("idx_prescription_status").on(table.status),
+  ]
 );
 
 /**
@@ -345,11 +310,7 @@ export const prescriptionItems = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Prescription item fields
     prescriptionId: uuid("prescription_id")
@@ -383,11 +344,9 @@ export const prescriptionItems = pgTable(
     allergyConflict: boolean("allergy_conflict").default(false),
     allergyConflictDetails: text("allergy_conflict_details"),
   },
-  (table) => ({
-    prescriptionIdIdx: index("idx_prescription_item_prescription_id").on(
-      table.prescriptionId
-    ),
-  })
+  (table) => [
+    index("idx_prescription_item_prescription_id").on(table.prescriptionId),
+  ]
 );
 
 /**
@@ -406,11 +365,7 @@ export const medicalLabOrders = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Lab order fields
     encounterId: uuid("encounter_id")
@@ -431,14 +386,10 @@ export const medicalLabOrders = pgTable(
     clinicalInfo: text("clinical_info"),
     notes: text("notes"),
   },
-  (table) => ({
-    encounterIdIdx: index("idx_medical_lab_order_encounter_id").on(
-      table.encounterId
-    ),
-    orderNumberIdx: uniqueIndex("idx_medical_lab_order_number").on(
-      table.orderNumber
-    ),
-  })
+  (table) => [
+    index("idx_medical_lab_order_encounter_id").on(table.encounterId),
+    uniqueIndex("idx_medical_lab_order_number").on(table.orderNumber),
+  ]
 );
 
 /**
@@ -457,11 +408,7 @@ export const medicalLabOrderItems = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Lab order item fields
     labOrderId: uuid("lab_order_id")
@@ -476,11 +423,9 @@ export const medicalLabOrderItems = pgTable(
     priority: varchar("priority", { length: 20 }),
     notes: text("notes"),
   },
-  (table) => ({
-    labOrderIdIdx: index("idx_medical_lab_order_item_lab_order_id").on(
-      table.labOrderId
-    ),
-  })
+  (table) => [
+    index("idx_medical_lab_order_item_lab_order_id").on(table.labOrderId),
+  ]
 );
 
 /**
@@ -499,11 +444,7 @@ export const referrals = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Referral fields
     encounterId: uuid("encounter_id")
@@ -526,12 +467,10 @@ export const referrals = pgTable(
     status: varchar("status", { length: 20 }).default("pending"),
     notes: text("notes"),
   },
-  (table) => ({
-    encounterIdIdx: index("idx_referral_encounter_id").on(table.encounterId),
-    referralNumberIdx: uniqueIndex("idx_referral_number").on(
-      table.referralNumber
-    ),
-  })
+  (table) => [
+    index("idx_referral_encounter_id").on(table.encounterId),
+    uniqueIndex("idx_referral_number").on(table.referralNumber),
+  ]
 );
 
 /**
@@ -550,11 +489,7 @@ export const medicalCertificates = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Medical certificate fields
     encounterId: uuid("encounter_id")
@@ -576,14 +511,10 @@ export const medicalCertificates = pgTable(
       onDelete: "set null",
     }),
   },
-  (table) => ({
-    encounterIdIdx: index("idx_medical_certificate_encounter_id").on(
-      table.encounterId
-    ),
-    certificateNumberIdx: uniqueIndex("idx_medical_certificate_number").on(
-      table.certificateNumber
-    ),
-  })
+  (table) => [
+    index("idx_medical_certificate_encounter_id").on(table.encounterId),
+    uniqueIndex("idx_medical_certificate_number").on(table.certificateNumber),
+  ]
 );
 
 // ============================================================================
@@ -606,11 +537,7 @@ export const dentalEncounters = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Dental encounter fields
     encounterId: uuid("encounter_id")
@@ -622,11 +549,7 @@ export const dentalEncounters = pgTable(
     periodontalStatus: text("periodontal_status"),
     notes: text("notes"),
   },
-  (table) => ({
-    encounterIdIdx: index("idx_dental_encounter_encounter_id").on(
-      table.encounterId
-    ),
-  })
+  (table) => [index("idx_dental_encounter_encounter_id").on(table.encounterId)]
 );
 
 /**
@@ -645,11 +568,7 @@ export const dentalCharts = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Dental chart fields
     dentalEncounterId: uuid("dental_encounter_id")
@@ -661,11 +580,9 @@ export const dentalCharts = pgTable(
       .references(() => users.id, { onDelete: "set null" }),
     notes: text("notes"),
   },
-  (table) => ({
-    dentalEncounterIdIdx: index("idx_dental_chart_dental_encounter_id").on(
-      table.dentalEncounterId
-    ),
-  })
+  (table) => [
+    index("idx_dental_chart_dental_encounter_id").on(table.dentalEncounterId),
+  ]
 );
 
 /**
@@ -684,11 +601,7 @@ export const dentalChartTeeth = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Tooth fields
     dentalChartId: uuid("dental_chart_id")
@@ -707,14 +620,10 @@ export const dentalChartTeeth = pgTable(
     >(),
     notes: text("notes"),
   },
-  (table) => ({
-    dentalChartIdIdx: index("idx_dental_chart_teeth_dental_chart_id").on(
-      table.dentalChartId
-    ),
-    toothNumberIdx: index("idx_dental_chart_teeth_tooth_number").on(
-      table.toothNumber
-    ),
-  })
+  (table) => [
+    index("idx_dental_chart_teeth_dental_chart_id").on(table.dentalChartId),
+    index("idx_dental_chart_teeth_tooth_number").on(table.toothNumber),
+  ]
 );
 
 /**
@@ -733,11 +642,7 @@ export const dentalProcedures = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Dental procedure fields
     dentalEncounterId: uuid("dental_encounter_id")
@@ -750,11 +655,11 @@ export const dentalProcedures = pgTable(
     procedureNameId: varchar("procedure_name_id", { length: 255 }),
     notes: text("notes"),
   },
-  (table) => ({
-    dentalEncounterIdIdx: index("idx_dental_procedure_dental_encounter_id").on(
+  (table) => [
+    index("idx_dental_procedure_dental_encounter_id").on(
       table.dentalEncounterId
     ),
-  })
+  ]
 );
 
 /**
@@ -773,11 +678,7 @@ export const dentalTreatmentPlans = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Treatment plan fields
     dentalEncounterId: uuid("dental_encounter_id")
@@ -793,11 +694,11 @@ export const dentalTreatmentPlans = pgTable(
     approvedAt: timestamp("approved_at"),
     notes: text("notes"),
   },
-  (table) => ({
-    dentalEncounterIdIdx: index(
-      "idx_dental_treatment_plan_dental_encounter_id"
-    ).on(table.dentalEncounterId),
-  })
+  (table) => [
+    index("idx_dental_treatment_plan_dental_encounter_id").on(
+      table.dentalEncounterId
+    ),
+  ]
 );
 
 // ============================================================================
@@ -820,11 +721,7 @@ export const pregnancies = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Pregnancy fields
     patientId: uuid("patient_id")
@@ -843,10 +740,10 @@ export const pregnancies = pgTable(
     risk: varchar("risk", { length: 20 }).default("low"),
     notes: text("notes"),
   },
-  (table) => ({
-    patientIdIdx: index("idx_pregnancy_patient_id").on(table.patientId),
-    encounterIdIdx: index("idx_pregnancy_encounter_id").on(table.encounterId),
-  })
+  (table) => [
+    index("idx_pregnancy_patient_id").on(table.patientId),
+    index("idx_pregnancy_encounter_id").on(table.encounterId),
+  ]
 );
 
 /**
@@ -865,11 +762,7 @@ export const ancVisits = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // ANC visit fields
     pregnancyId: uuid("pregnancy_id")
@@ -890,10 +783,10 @@ export const ancVisits = pgTable(
     notes: text("notes"),
     nextVisitDate: date("next_visit_date"),
   },
-  (table) => ({
-    pregnancyIdIdx: index("idx_anc_visit_pregnancy_id").on(table.pregnancyId),
-    visitDateIdx: index("idx_anc_visit_date").on(table.visitDate),
-  })
+  (table) => [
+    index("idx_anc_visit_pregnancy_id").on(table.pregnancyId),
+    index("idx_anc_visit_date").on(table.visitDate),
+  ]
 );
 
 /**
@@ -912,11 +805,7 @@ export const immunizations = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Immunization fields
     patientId: uuid("patient_id")
@@ -942,15 +831,11 @@ export const immunizations = pgTable(
     nextDoseDate: date("next_dose_date"),
     notes: text("notes"),
   },
-  (table) => ({
-    patientIdIdx: index("idx_immunization_patient_id").on(table.patientId),
-    encounterIdIdx: index("idx_immunization_encounter_id").on(
-      table.encounterId
-    ),
-    immunizationTypeIdx: index("idx_immunization_type").on(
-      table.immunizationType
-    ),
-  })
+  (table) => [
+    index("idx_immunization_patient_id").on(table.patientId),
+    index("idx_immunization_encounter_id").on(table.encounterId),
+    index("idx_immunization_type").on(table.immunizationType),
+  ]
 );
 
 /**
@@ -969,11 +854,7 @@ export const growthMeasurements = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Growth measurement fields
     patientId: uuid("patient_id")
@@ -994,17 +875,11 @@ export const growthMeasurements = pgTable(
     nutritionalStatus: varchar("nutritional_status", { length: 50 }),
     notes: text("notes"),
   },
-  (table) => ({
-    patientIdIdx: index("idx_growth_measurement_patient_id").on(
-      table.patientId
-    ),
-    encounterIdIdx: index("idx_growth_measurement_encounter_id").on(
-      table.encounterId
-    ),
-    measurementDateIdx: index("idx_growth_measurement_date").on(
-      table.measurementDate
-    ),
-  })
+  (table) => [
+    index("idx_growth_measurement_patient_id").on(table.patientId),
+    index("idx_growth_measurement_encounter_id").on(table.encounterId),
+    index("idx_growth_measurement_date").on(table.measurementDate),
+  ]
 );
 
 // ============================================================================

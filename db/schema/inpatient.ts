@@ -19,6 +19,7 @@ import {
   admissionTypeEnum,
   dischargeDispositionEnum,
   marStatusEnum,
+  BsonResource,
 } from "./core";
 import { organizations } from "./organization";
 import { users } from "./users";
@@ -47,11 +48,7 @@ export const wards = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Ward fields
     organizationId: uuid("organization_id")
@@ -70,15 +67,12 @@ export const wards = pgTable(
     capacity: integer("capacity"),
     notes: text("notes"),
   },
-  (table) => ({
-    orgIdIdx: index("idx_ward_org_id").on(table.organizationId),
-    branchIdIdx: index("idx_ward_branch_id").on(table.branchId),
-    wardCodeIdx: uniqueIndex("idx_ward_code").on(
-      table.organizationId,
-      table.wardCode
-    ),
-    isActiveIdx: index("idx_ward_active").on(table.isActive),
-  })
+  (table) => [
+    index("idx_ward_org_id").on(table.organizationId),
+    index("idx_ward_branch_id").on(table.branchId),
+    uniqueIndex("idx_ward_code").on(table.organizationId, table.wardCode),
+    index("idx_ward_active").on(table.isActive),
+  ]
 );
 
 /**
@@ -97,11 +91,7 @@ export const rooms = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Room fields
     wardId: uuid("ward_id")
@@ -120,12 +110,12 @@ export const rooms = pgTable(
     isActive: boolean("is_active").default(true),
     notes: text("notes"),
   },
-  (table) => ({
-    wardIdIdx: index("idx_room_ward_id").on(table.wardId),
-    roomCodeIdx: uniqueIndex("idx_room_code").on(table.wardId, table.roomCode),
-    roomClassIdx: index("idx_room_class").on(table.roomClass),
-    isActiveIdx: index("idx_room_active").on(table.isActive),
-  })
+  (table) => [
+    index("idx_room_ward_id").on(table.wardId),
+    uniqueIndex("idx_room_code").on(table.wardId, table.roomCode),
+    index("idx_room_class").on(table.roomClass),
+    index("idx_room_active").on(table.isActive),
+  ]
 );
 
 /**
@@ -144,11 +134,7 @@ export const beds = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Bed fields
     roomId: uuid("room_id")
@@ -163,14 +149,11 @@ export const beds = pgTable(
     isMonitor: boolean("is_monitor").default(false),
     notes: text("notes"),
   },
-  (table) => ({
-    roomIdIdx: index("idx_bed_room_id").on(table.roomId),
-    bedNumberIdx: uniqueIndex("idx_bed_number").on(
-      table.roomId,
-      table.bedNumber
-    ),
-    statusIdx: index("idx_bed_status").on(table.status),
-  })
+  (table) => [
+    index("idx_bed_room_id").on(table.roomId),
+    uniqueIndex("idx_bed_number").on(table.roomId, table.bedNumber),
+    index("idx_bed_status").on(table.status),
+  ]
 );
 
 /**
@@ -189,11 +172,7 @@ export const admissions = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Admission fields
     organizationId: uuid("organization_id")
@@ -229,18 +208,16 @@ export const admissions = pgTable(
     satusehatEncounterId: varchar("satusehat_encounter_id", { length: 100 }),
     notes: text("notes"),
   },
-  (table) => ({
-    orgIdIdx: index("idx_admission_org_id").on(table.organizationId),
-    branchIdIdx: index("idx_admission_branch_id").on(table.branchId),
-    patientIdIdx: index("idx_admission_patient_id").on(table.patientId),
-    encounterIdIdx: index("idx_admission_encounter_id").on(table.encounterId),
-    bedIdIdx: index("idx_admission_bed_id").on(table.bedId),
-    admissionNumberIdx: uniqueIndex("idx_admission_number").on(
-      table.admissionNumber
-    ),
-    admissionDateIdx: index("idx_admission_date").on(table.admissionDate),
-    statusIdx: index("idx_admission_status").on(table.status),
-  })
+  (table) => [
+    index("idx_admission_org_id").on(table.organizationId),
+    index("idx_admission_branch_id").on(table.branchId),
+    index("idx_admission_patient_id").on(table.patientId),
+    index("idx_admission_encounter_id").on(table.encounterId),
+    index("idx_admission_bed_id").on(table.bedId),
+    uniqueIndex("idx_admission_number").on(table.admissionNumber),
+    index("idx_admission_date").on(table.admissionDate),
+    index("idx_admission_status").on(table.status),
+  ]
 );
 
 /**
@@ -259,11 +236,7 @@ export const inpatientProgressNotes = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Progress note fields
     admissionId: uuid("admission_id")
@@ -286,12 +259,10 @@ export const inpatientProgressNotes = pgTable(
     >(),
     notes: text("notes"),
   },
-  (table) => ({
-    admissionIdIdx: index("idx_inpatient_progress_note_admission_id").on(
-      table.admissionId
-    ),
-    notedAtIdx: index("idx_inpatient_progress_note_noted_at").on(table.notedAt),
-  })
+  (table) => [
+    index("idx_inpatient_progress_note_admission_id").on(table.admissionId),
+    index("idx_inpatient_progress_note_noted_at").on(table.notedAt),
+  ]
 );
 
 /**
@@ -310,11 +281,7 @@ export const medicationAdministrations = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // MAR fields
     admissionId: uuid("admission_id")
@@ -339,15 +306,13 @@ export const medicationAdministrations = pgTable(
     }), // For controlled substances
     notes: text("notes"),
   },
-  (table) => ({
-    admissionIdIdx: index("idx_medication_administration_admission_id").on(
-      table.admissionId
-    ),
-    scheduledTimeIdx: index("idx_medication_administration_scheduled_time").on(
+  (table) => [
+    index("idx_medication_administration_admission_id").on(table.admissionId),
+    index("idx_medication_administration_scheduled_time").on(
       table.scheduledTime
     ),
-    statusIdx: index("idx_medication_administration_status").on(table.status),
-  })
+    index("idx_medication_administration_status").on(table.status),
+  ]
 );
 
 // ============================================================================

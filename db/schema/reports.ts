@@ -18,6 +18,7 @@ import {
   reportFrequencyEnum,
   reportFormatEnum,
   reportGenerationStatusEnum,
+  BsonResource,
 } from "./core";
 import { organizations } from "./organization";
 import { users } from "./users";
@@ -44,11 +45,7 @@ export const reportDefinitions = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Report definition fields
     reportCode: varchar("report_code", { length: 50 }).notNull().unique(),
@@ -64,13 +61,11 @@ export const reportDefinitions = pgTable(
     templatePath: varchar("template_path", { length: 500 }),
     isActive: boolean("is_active").default(true),
   },
-  (table) => ({
-    reportCodeIdx: uniqueIndex("idx_report_def_code").on(table.reportCode),
-    reportCategoryIdx: index("idx_report_def_category").on(
-      table.reportCategory
-    ),
-    isActiveIdx: index("idx_report_def_active").on(table.isActive),
-  })
+  (table) => [
+    uniqueIndex("idx_report_def_code").on(table.reportCode),
+    index("idx_report_def_category").on(table.reportCategory),
+    index("idx_report_def_active").on(table.isActive),
+  ]
 );
 
 /**
@@ -89,11 +84,7 @@ export const reportGenerations = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Report generation fields
     reportDefinitionId: uuid("report_definition_id")
@@ -116,16 +107,12 @@ export const reportGenerations = pgTable(
     fileSizeBytes: integer("file_size_bytes"),
     expiresAt: timestamp("expires_at"),
   },
-  (table) => ({
-    reportDefinitionIdIdx: index("idx_report_gen_def").on(
-      table.reportDefinitionId
-    ),
-    generationStatusIdx: index("idx_report_gen_status").on(
-      table.generationStatus
-    ),
-    requestedAtIdx: index("idx_report_gen_date").on(table.requestedAt),
-    expiresAtIdx: index("idx_report_gen_expires").on(table.expiresAt),
-  })
+  (table) => [
+    index("idx_report_gen_def").on(table.reportDefinitionId),
+    index("idx_report_gen_status").on(table.generationStatus),
+    index("idx_report_gen_date").on(table.requestedAt),
+    index("idx_report_gen_expires").on(table.expiresAt),
+  ]
 );
 
 /**
@@ -144,11 +131,7 @@ export const reportSchedules = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Report schedule fields
     reportDefinitionId: uuid("report_definition_id")
@@ -168,16 +151,11 @@ export const reportSchedules = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "set null" }),
   },
-  (table) => ({
-    reportDefinitionIdIdx: index("idx_schedule_def").on(
-      table.reportDefinitionId
-    ),
-    nextRunAtIdx: index("idx_schedule_next").on(
-      table.nextRunAt,
-      table.isActive
-    ),
-    isActiveIdx: index("idx_schedule_active").on(table.isActive),
-  })
+  (table) => [
+    index("idx_schedule_def").on(table.reportDefinitionId),
+    index("idx_schedule_next").on(table.nextRunAt, table.isActive),
+    index("idx_schedule_active").on(table.isActive),
+  ]
 );
 
 /**
@@ -190,15 +168,13 @@ export const diseaseStatisticsCache = pgTable(
     id: uuid("id").defaultRandom().primaryKey(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    createdBy: uuid("created_by"),
+    updatedBy: uuid("updated_by"),
     deletedAt: timestamp("deleted_at"),
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Disease statistics fields
     periodType: varchar("period_type", { length: 20 }).notNull(), // daily, weekly, monthly, yearly
@@ -222,16 +198,13 @@ export const diseaseStatisticsCache = pgTable(
       onDelete: "set null",
     }),
   },
-  (table) => ({
-    periodTypeIdx: index("idx_disease_stats_period").on(
-      table.periodType,
-      table.periodDate
-    ),
-    icd10CodeIdx: index("idx_disease_stats_icd").on(table.icd10Code),
-    polyclinicIdIdx: index("idx_disease_stats_poli").on(table.polyclinicId),
-    branchIdIdx: index("idx_disease_stats_branch").on(table.branchId),
-    calculatedAtIdx: index("idx_disease_stats_calc").on(table.calculatedAt),
-  })
+  (table) => [
+    index("idx_disease_stats_period").on(table.periodType, table.periodDate),
+    index("idx_disease_stats_icd").on(table.icd10Code),
+    index("idx_disease_stats_poli").on(table.polyclinicId),
+    index("idx_disease_stats_branch").on(table.branchId),
+    index("idx_disease_stats_calc").on(table.calculatedAt),
+  ]
 );
 
 /**
@@ -244,15 +217,13 @@ export const kiaIndicatorsCache = pgTable(
     id: uuid("id").defaultRandom().primaryKey(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    createdBy: uuid("created_by"),
+    updatedBy: uuid("updated_by"),
     deletedAt: timestamp("deleted_at"),
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // KIA indicators fields
     periodMonth: integer("period_month").notNull(),
@@ -268,12 +239,12 @@ export const kiaIndicatorsCache = pgTable(
       onDelete: "set null",
     }),
   },
-  (table) => ({
-    periodIdx: index("idx_kia_period").on(table.periodMonth, table.periodYear),
-    indicatorTypeIdx: index("idx_kia_type").on(table.indicatorType),
-    branchIdIdx: index("idx_kia_branch").on(table.branchId),
-    calculatedAtIdx: index("idx_kia_calc").on(table.calculatedAt),
-  })
+  (table) => [
+    index("idx_kia_period").on(table.periodMonth, table.periodYear),
+    index("idx_kia_type").on(table.indicatorType),
+    index("idx_kia_branch").on(table.branchId),
+    index("idx_kia_calc").on(table.calculatedAt),
+  ]
 );
 
 // ============================================================================

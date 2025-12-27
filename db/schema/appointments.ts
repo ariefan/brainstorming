@@ -97,22 +97,16 @@ export const appointments = pgTable(
       length: 30,
     }),
   },
-  (table) => ({
-    orgIdIdx: index("idx_appointment_org_id").on(table.organizationId),
-    branchIdIdx: index("idx_appointment_branch_id").on(table.branchId),
-    patientIdIdx: index("idx_appointment_patient_id").on(table.patientId),
-    practitionerIdIdx: index("idx_appointment_practitioner_id").on(
-      table.practitionerId
-    ),
-    polyclinicIdIdx: index("idx_appointment_polyclinic_id").on(
-      table.polyclinicId
-    ),
-    appointmentNumberIdx: uniqueIndex("idx_appointment_number").on(
-      table.appointmentNumber
-    ),
-    appointmentDateIdx: index("idx_appointment_date").on(table.appointmentDate),
-    statusIdx: index("idx_appointment_status").on(table.status),
-  })
+  (table) => [
+    index("idx_appointment_org_id").on(table.organizationId),
+    index("idx_appointment_branch_id").on(table.branchId),
+    index("idx_appointment_patient_id").on(table.patientId),
+    index("idx_appointment_practitioner_id").on(table.practitionerId),
+    index("idx_appointment_polyclinic_id").on(table.polyclinicId),
+    uniqueIndex("idx_appointment_number").on(table.appointmentNumber),
+    index("idx_appointment_date").on(table.appointmentDate),
+    index("idx_appointment_status").on(table.status),
+  ]
 );
 
 /**
@@ -145,13 +139,11 @@ export const appointmentReminders = pgTable(
     message: text("message"),
     retryCount: integer("retry_count").default(0),
   },
-  (table) => ({
-    appointmentIdIdx: index("idx_reminder_appointment_id").on(
-      table.appointmentId
-    ),
-    reminderTimeIdx: index("idx_reminder_time").on(table.reminderTime),
-    statusIdx: index("idx_reminder_status").on(table.status),
-  })
+  (table) => [
+    index("idx_reminder_appointment_id").on(table.appointmentId),
+    index("idx_reminder_time").on(table.reminderTime),
+    index("idx_reminder_status").on(table.status),
+  ]
 );
 
 /**
@@ -213,20 +205,18 @@ export const queues = pgTable(
     skipReason: text("skip_reason"),
     notes: text("notes"),
   },
-  (table) => ({
-    orgIdIdx: index("idx_queue_org_id").on(table.organizationId),
-    branchIdIdx: index("idx_queue_branch_id").on(table.branchId),
-    polyclinicIdIdx: index("idx_queue_polyclinic_id").on(table.polyclinicId),
-    queueDateIdx: index("idx_queue_date").on(table.queueDate),
-    queueNumberIdx: index("idx_queue_number").on(table.queueNumber),
-    patientIdIdx: index("idx_queue_patient_id").on(table.patientId),
-    appointmentIdIdx: index("idx_queue_appointment_id").on(table.appointmentId),
-    practitionerIdIdx: index("idx_queue_practitioner_id").on(
-      table.practitionerId
-    ),
-    statusIdx: index("idx_queue_status").on(table.status),
-    priorityIdx: index("idx_queue_priority").on(table.priority),
-  })
+  (table) => [
+    index("idx_queue_org_id").on(table.organizationId),
+    index("idx_queue_branch_id").on(table.branchId),
+    index("idx_queue_polyclinic_id").on(table.polyclinicId),
+    index("idx_queue_date").on(table.queueDate),
+    index("idx_queue_number").on(table.queueNumber),
+    index("idx_queue_patient_id").on(table.patientId),
+    index("idx_queue_appointment_id").on(table.appointmentId),
+    index("idx_queue_practitioner_id").on(table.practitionerId),
+    index("idx_queue_status").on(table.status),
+    index("idx_queue_priority").on(table.priority),
+  ]
 );
 
 /**
@@ -257,10 +247,10 @@ export const queueCallLogs = pgTable(
     noShow: boolean("no_show").default(false),
     notes: text("notes"),
   },
-  (table) => ({
-    queueIdIdx: index("idx_queue_call_queue_id").on(table.queueId),
-    calledAtIdx: index("idx_queue_call_called_at").on(table.calledAt),
-  })
+  (table) => [
+    index("idx_queue_call_queue_id").on(table.queueId),
+    index("idx_queue_call_called_at").on(table.calledAt),
+  ]
 );
 
 /**
@@ -304,14 +294,12 @@ export const queueDisplayConfigs = pgTable(
     voiceLanguage: varchar("voice_language", { length: 10 }).default("id"),
     isActive: boolean("is_active").default(true),
   },
-  (table) => ({
-    orgIdIdx: index("idx_queue_display_org_id").on(table.organizationId),
-    branchIdIdx: index("idx_queue_display_branch_id").on(table.branchId),
-    polyclinicIdIdx: index("idx_queue_display_polyclinic_id").on(
-      table.polyclinicId
-    ),
-    isActiveIdx: index("idx_queue_display_active").on(table.isActive),
-  })
+  (table) => [
+    index("idx_queue_display_org_id").on(table.organizationId),
+    index("idx_queue_display_branch_id").on(table.branchId),
+    index("idx_queue_display_polyclinic_id").on(table.polyclinicId),
+    index("idx_queue_display_active").on(table.isActive),
+  ]
 );
 
 // ============================================================================

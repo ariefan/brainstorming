@@ -19,6 +19,7 @@ import {
   patientStatusEnum,
   allergySeverityEnum,
   allergyTypeEnum,
+  BsonResource,
 } from "./core";
 import { organizations } from "./organization";
 import { users } from "./users";
@@ -43,11 +44,7 @@ export const patients = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Patient fields
     organizationId: uuid("organization_id")
@@ -97,19 +94,17 @@ export const patients = pgTable(
     notes: text("notes"),
     customFields: jsonb("custom_fields").$type<Record<string, any>>(),
   },
-  (table) => ({
-    orgIdIdx: index("idx_patient_org_id").on(table.organizationId),
-    branchIdIdx: index("idx_patient_branch_id").on(table.branchId),
-    mrnIdx: uniqueIndex("idx_patient_mrn").on(table.mrn),
-    nikIdx: uniqueIndex("idx_patient_nik").on(table.nik),
-    bpjsNumberIdx: index("idx_patient_bpjs_number").on(table.bpjsNumber),
-    satusehatIhsIdIdx: index("idx_patient_satusehat_ihs_id").on(
-      table.satusehatIhsId
-    ),
-    statusIdx: index("idx_patient_status").on(table.status),
-    dateOfBirthIdx: index("idx_patient_dob").on(table.dateOfBirth),
-    fullNameIdx: index("idx_patient_full_name").on(table.fullName),
-  })
+  (table) => [
+    index("idx_patient_org_id").on(table.organizationId),
+    index("idx_patient_branch_id").on(table.branchId),
+    uniqueIndex("idx_patient_mrn").on(table.mrn),
+    uniqueIndex("idx_patient_nik").on(table.nik),
+    index("idx_patient_bpjs_number").on(table.bpjsNumber),
+    index("idx_patient_satusehat_ihs_id").on(table.satusehatIhsId),
+    index("idx_patient_status").on(table.status),
+    index("idx_patient_dob").on(table.dateOfBirth),
+    index("idx_patient_full_name").on(table.fullName),
+  ]
 );
 
 /**
@@ -128,11 +123,7 @@ export const allergies = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Allergy fields
     patientId: uuid("patient_id")
@@ -151,12 +142,12 @@ export const allergies = pgTable(
     notes: text("notes"),
     rxNormCode: varchar("rx_norm_code", { length: 20 }), // RxNorm code for medications
   },
-  (table) => ({
-    patientIdIdx: index("idx_allergy_patient_id").on(table.patientId),
-    allergenTypeIdx: index("idx_allergy_type").on(table.allergenType),
-    severityIdx: index("idx_allergy_severity").on(table.severity),
-    isVerifiedIdx: index("idx_allergy_verified").on(table.isVerified),
-  })
+  (table) => [
+    index("idx_allergy_patient_id").on(table.patientId),
+    index("idx_allergy_type").on(table.allergenType),
+    index("idx_allergy_severity").on(table.severity),
+    index("idx_allergy_verified").on(table.isVerified),
+  ]
 );
 
 /**
@@ -175,11 +166,7 @@ export const chronicConditions = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Chronic condition fields
     patientId: uuid("patient_id")
@@ -201,11 +188,11 @@ export const chronicConditions = pgTable(
       }>
     >(),
   },
-  (table) => ({
-    patientIdIdx: index("idx_chronic_condition_patient_id").on(table.patientId),
-    icd10CodeIdx: index("idx_chronic_condition_icd10").on(table.icd10Code),
-    statusIdx: index("idx_chronic_condition_status").on(table.status),
-  })
+  (table) => [
+    index("idx_chronic_condition_patient_id").on(table.patientId),
+    index("idx_chronic_condition_icd10").on(table.icd10Code),
+    index("idx_chronic_condition_status").on(table.status),
+  ]
 );
 
 /**
@@ -224,11 +211,7 @@ export const familyRelationships = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Family relationship fields
     patientId: uuid("patient_id")
@@ -242,17 +225,15 @@ export const familyRelationships = pgTable(
     isPrimaryContact: boolean("is_primary_contact").default(false),
     notes: text("notes"),
   },
-  (table) => ({
-    patientIdIdx: index("idx_family_patient_id").on(table.patientId),
-    familyMemberIdIdx: index("idx_family_member_id").on(table.familyMemberId),
-    relationshipTypeIdx: index("idx_family_relationship_type").on(
-      table.relationshipType
-    ),
-    patientFamilyIdx: uniqueIndex("idx_family_patient_member").on(
+  (table) => [
+    index("idx_family_patient_id").on(table.patientId),
+    index("idx_family_member_id").on(table.familyMemberId),
+    index("idx_family_relationship_type").on(table.relationshipType),
+    uniqueIndex("idx_family_patient_member").on(
       table.patientId,
       table.familyMemberId
     ),
-  })
+  ]
 );
 
 // ============================================================================

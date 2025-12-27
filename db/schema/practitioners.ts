@@ -17,6 +17,7 @@ import {
   specialtyEnum,
   polyclinicTypeEnum,
   dayOfWeekEnum,
+  BsonResource,
 } from "./core";
 import { organizations } from "./organization";
 import { users } from "./users";
@@ -41,11 +42,7 @@ export const polyclinics = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Polyclinic fields
     organizationId: uuid("organization_id")
@@ -77,16 +74,16 @@ export const polyclinics = pgTable(
       sunday?: { open: string; close: string; closed?: boolean };
     }>(),
   },
-  (table) => ({
-    orgIdIdx: index("idx_polyclinic_org_id").on(table.organizationId),
-    branchIdIdx: index("idx_polyclinic_branch_id").on(table.branchId),
-    polyclinicCodeIdx: uniqueIndex("idx_polyclinic_code").on(
+  (table) => [
+    index("idx_polyclinic_org_id").on(table.organizationId),
+    index("idx_polyclinic_branch_id").on(table.branchId),
+    uniqueIndex("idx_polyclinic_code").on(
       table.organizationId,
       table.polyclinicCode
     ),
-    polyclinicTypeIdx: index("idx_polyclinic_type").on(table.polyclinicType),
-    isActiveIdx: index("idx_polyclinic_active").on(table.isActive),
-  })
+    index("idx_polyclinic_type").on(table.polyclinicType),
+    index("idx_polyclinic_active").on(table.isActive),
+  ]
 );
 
 /**
@@ -105,11 +102,7 @@ export const practitioners = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Practitioner fields
     organizationId: uuid("organization_id")
@@ -152,19 +145,15 @@ export const practitioners = pgTable(
     isActive: boolean("is_active").default(true),
     notes: text("notes"),
   },
-  (table) => ({
-    orgIdIdx: index("idx_practitioner_org_id").on(table.organizationId),
-    branchIdIdx: index("idx_practitioner_branch_id").on(table.branchId),
-    userIdIdx: uniqueIndex("idx_practitioner_user_id").on(table.userId),
-    practitionerCodeIdx: uniqueIndex("idx_practitioner_code").on(
-      table.practitionerCode
-    ),
-    nikIdx: index("idx_practitioner_nik").on(table.nik),
-    satusehatIhsIdIdx: index("idx_practitioner_satusehat_ihs_id").on(
-      table.satusehatIhsId
-    ),
-    isActiveIdx: index("idx_practitioner_active").on(table.isActive),
-  })
+  (table) => [
+    index("idx_practitioner_org_id").on(table.organizationId),
+    index("idx_practitioner_branch_id").on(table.branchId),
+    uniqueIndex("idx_practitioner_user_id").on(table.userId),
+    uniqueIndex("idx_practitioner_code").on(table.practitionerCode),
+    index("idx_practitioner_nik").on(table.nik),
+    index("idx_practitioner_satusehat_ihs_id").on(table.satusehatIhsId),
+    index("idx_practitioner_active").on(table.isActive),
+  ]
 );
 
 /**
@@ -183,11 +172,7 @@ export const practitionerPolyclinics = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Assignment fields
     practitionerId: uuid("practitioner_id")
@@ -201,19 +186,15 @@ export const practitionerPolyclinics = pgTable(
     effectiveFrom: date("effective_from"),
     effectiveUntil: date("effective_until"),
   },
-  (table) => ({
-    practitionerIdIdx: index("idx_pract_poly_practitioner_id").on(
-      table.practitionerId
-    ),
-    polyclinicIdIdx: index("idx_pract_poly_polyclinic_id").on(
-      table.polyclinicId
-    ),
-    practitionerPolyclinicIdx: uniqueIndex("idx_pract_poly_unique").on(
+  (table) => [
+    index("idx_pract_poly_practitioner_id").on(table.practitionerId),
+    index("idx_pract_poly_polyclinic_id").on(table.polyclinicId),
+    uniqueIndex("idx_pract_poly_unique").on(
       table.practitionerId,
       table.polyclinicId
     ),
-    isActiveIdx: index("idx_pract_poly_active").on(table.isActive),
-  })
+    index("idx_pract_poly_active").on(table.isActive),
+  ]
 );
 
 /**
@@ -232,11 +213,7 @@ export const practitionerSchedules = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Schedule fields
     practitionerId: uuid("practitioner_id")
@@ -256,19 +233,17 @@ export const practitionerSchedules = pgTable(
     effectiveFrom: date("effective_from"),
     effectiveUntil: date("effective_until"),
   },
-  (table) => ({
-    practitionerIdIdx: index("idx_schedule_practitioner_id").on(
-      table.practitionerId
-    ),
-    polyclinicIdIdx: index("idx_schedule_polyclinic_id").on(table.polyclinicId),
-    dayOfWeekIdx: index("idx_schedule_day_of_week").on(table.dayOfWeek),
-    isActiveIdx: index("idx_schedule_active").on(table.isActive),
-    practitionerDayIdx: uniqueIndex("idx_schedule_practitioner_day").on(
+  (table) => [
+    index("idx_schedule_practitioner_id").on(table.practitionerId),
+    index("idx_schedule_polyclinic_id").on(table.polyclinicId),
+    index("idx_schedule_day_of_week").on(table.dayOfWeek),
+    index("idx_schedule_active").on(table.isActive),
+    uniqueIndex("idx_schedule_practitioner_day").on(
       table.practitionerId,
       table.polyclinicId,
       table.dayOfWeek
     ),
-  })
+  ]
 );
 
 /**
@@ -287,11 +262,7 @@ export const scheduleExceptions = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Exception fields
     practitionerId: uuid("practitioner_id")
@@ -310,16 +281,12 @@ export const scheduleExceptions = pgTable(
     recurringPattern: varchar("recurring_pattern", { length: 50 }), // weekly, monthly, yearly
     recurringUntil: date("recurring_until"),
   },
-  (table) => ({
-    practitionerIdIdx: index("idx_exception_practitioner_id").on(
-      table.practitionerId
-    ),
-    polyclinicIdIdx: index("idx_exception_polyclinic_id").on(
-      table.polyclinicId
-    ),
-    exceptionDateIdx: index("idx_exception_date").on(table.exceptionDate),
-    exceptionTypeIdx: index("idx_exception_type").on(table.exceptionType),
-  })
+  (table) => [
+    index("idx_exception_practitioner_id").on(table.practitionerId),
+    index("idx_exception_polyclinic_id").on(table.polyclinicId),
+    index("idx_exception_date").on(table.exceptionDate),
+    index("idx_exception_type").on(table.exceptionType),
+  ]
 );
 
 /**
@@ -335,11 +302,7 @@ export const appointmentSlots = pgTable(
     deletedAt: timestamp("deleted_at"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Slot fields
     practitionerId: uuid("practitioner_id")
@@ -356,15 +319,13 @@ export const appointmentSlots = pgTable(
     isOnline: boolean("is_online").default(false),
     isVideoCall: boolean("is_video_call").default(false),
   },
-  (table) => ({
-    practitionerIdIdx: index("idx_slot_practitioner_id").on(
-      table.practitionerId
-    ),
-    polyclinicIdIdx: index("idx_slot_polyclinic_id").on(table.polyclinicId),
-    slotDateIdx: index("idx_slot_date").on(table.slotDate),
-    statusIdx: index("idx_slot_status").on(table.status),
-    appointmentIdIdx: index("idx_slot_appointment_id").on(table.appointmentId),
-  })
+  (table) => [
+    index("idx_slot_practitioner_id").on(table.practitionerId),
+    index("idx_slot_polyclinic_id").on(table.polyclinicId),
+    index("idx_slot_date").on(table.slotDate),
+    index("idx_slot_status").on(table.status),
+    index("idx_slot_appointment_id").on(table.appointmentId),
+  ]
 );
 
 // ============================================================================

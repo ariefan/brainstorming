@@ -10,7 +10,7 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-import { orgTypeEnum, subscriptionPlanEnum } from "./core";
+import { orgTypeEnum, subscriptionPlanEnum, BsonResource } from "./core";
 
 // ============================================================================
 // ORGANIZATION TABLES
@@ -32,11 +32,7 @@ export const organizations = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Organization fields
     orgCode: varchar("org_code", { length: 20 }).notNull().unique(),
@@ -72,13 +68,13 @@ export const organizations = pgTable(
       timeFormat?: "12h" | "24h";
     }>(),
   },
-  (table) => ({
-    orgCodeIdx: index("idx_org_code").on(table.orgCode),
-    orgTypeIdx: index("idx_org_type").on(table.orgType),
-    satusehatOrgIdIdx: index("idx_satusehat_org_id").on(table.satusehatOrgId),
-    bpjsPpkCodeIdx: index("idx_bpjs_ppk_code").on(table.bpjsPpkCode),
-    isActiveIdx: index("idx_org_active").on(table.isActive),
-  })
+  (table) => [
+    index("idx_org_code").on(table.orgCode),
+    index("idx_org_type").on(table.orgType),
+    index("idx_satusehat_org_id").on(table.satusehatOrgId),
+    index("idx_bpjs_ppk_code").on(table.bpjsPpkCode),
+    index("idx_org_active").on(table.isActive),
+  ]
 );
 
 /**
@@ -97,11 +93,7 @@ export const branches = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Branch fields
     organizationId: uuid("organization_id")
@@ -134,17 +126,12 @@ export const branches = pgTable(
     isHeadquarters: boolean("is_headquarters").default(false),
     isActive: boolean("is_active").default(true),
   },
-  (table) => ({
-    orgIdIdx: index("idx_branch_org_id").on(table.organizationId),
-    branchCodeIdx: uniqueIndex("idx_branch_code").on(
-      table.organizationId,
-      table.branchCode
-    ),
-    satusehatLocationIdIdx: index("idx_branch_satusehat_id").on(
-      table.satusehatLocationId
-    ),
-    isActiveIdx: index("idx_branch_active").on(table.isActive),
-  })
+  (table) => [
+    index("idx_branch_org_id").on(table.organizationId),
+    uniqueIndex("idx_branch_code").on(table.organizationId, table.branchCode),
+    index("idx_branch_satusehat_id").on(table.satusehatLocationId),
+    index("idx_branch_active").on(table.isActive),
+  ]
 );
 
 // ============================================================================

@@ -17,6 +17,7 @@ import {
   controlledSubstanceScheduleEnum,
   stockMovementTypeEnum,
   dispenseStatusEnum,
+  BsonResource,
 } from "./core";
 import { organizations } from "./organization";
 import { users } from "./users";
@@ -29,7 +30,7 @@ import { encounters } from "./medical";
 
 /**
  * Medications table
- * Represents medications in the pharmacy
+ * Represents medications in pharmacy
  */
 export const medications = pgTable(
   "medications",
@@ -43,11 +44,7 @@ export const medications = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Medication fields
     organizationId: uuid("organization_id")
@@ -82,16 +79,14 @@ export const medications = pgTable(
     requiresPrescription: boolean("requires_prescription").default(false),
     notes: text("notes"),
   },
-  (table) => ({
-    orgIdIdx: index("idx_medication_org_id").on(table.organizationId),
-    branchIdIdx: index("idx_medication_branch_id").on(table.branchId),
-    medicationCodeIdx: uniqueIndex("idx_medication_code").on(
-      table.medicationCode
-    ),
-    kfaCodeIdx: index("idx_medication_kfa_code").on(table.kfaCode),
-    rxNormCodeIdx: index("idx_medication_rx_norm_code").on(table.rxNormCode),
-    isActiveIdx: index("idx_medication_active").on(table.isActive),
-  })
+  (table) => [
+    index("idx_medication_org_id").on(table.organizationId),
+    index("idx_medication_branch_id").on(table.branchId),
+    uniqueIndex("idx_medication_code").on(table.medicationCode),
+    index("idx_medication_kfa_code").on(table.kfaCode),
+    index("idx_medication_rx_norm_code").on(table.rxNormCode),
+    index("idx_medication_active").on(table.isActive),
+  ]
 );
 
 /**
@@ -110,11 +105,7 @@ export const medicationStock = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Stock fields
     medicationId: uuid("medication_id")
@@ -136,17 +127,15 @@ export const medicationStock = pgTable(
     lastStockCheckDate: date("last_stock_check_date"),
     notes: text("notes"),
   },
-  (table) => ({
-    medicationIdIdx: index("idx_medication_stock_medication_id").on(
-      table.medicationId
-    ),
-    orgIdIdx: index("idx_medication_stock_org_id").on(table.organizationId),
-    branchIdIdx: index("idx_medication_stock_branch_id").on(table.branchId),
-    medicationBranchIdx: uniqueIndex("idx_medication_stock_unique").on(
+  (table) => [
+    index("idx_medication_stock_medication_id").on(table.medicationId),
+    index("idx_medication_stock_org_id").on(table.organizationId),
+    index("idx_medication_stock_branch_id").on(table.branchId),
+    uniqueIndex("idx_medication_stock_unique").on(
       table.medicationId,
       table.branchId
     ),
-  })
+  ]
 );
 
 /**
@@ -165,11 +154,7 @@ export const medicationBatches = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Batch fields
     medicationId: uuid("medication_id")
@@ -194,17 +179,13 @@ export const medicationBatches = pgTable(
     storageLocation: varchar("storage_location", { length: 100 }),
     notes: text("notes"),
   },
-  (table) => ({
-    medicationIdIdx: index("idx_medication_batch_medication_id").on(
-      table.medicationId
-    ),
-    orgIdIdx: index("idx_medication_batch_org_id").on(table.organizationId),
-    branchIdIdx: index("idx_medication_batch_branch_id").on(table.branchId),
-    batchNumberIdx: index("idx_medication_batch_number").on(table.batchNumber),
-    expiryDateIdx: index("idx_medication_batch_expiry_date").on(
-      table.expiryDate
-    ),
-  })
+  (table) => [
+    index("idx_medication_batch_medication_id").on(table.medicationId),
+    index("idx_medication_batch_org_id").on(table.organizationId),
+    index("idx_medication_batch_branch_id").on(table.branchId),
+    index("idx_medication_batch_number").on(table.batchNumber),
+    index("idx_medication_batch_expiry_date").on(table.expiryDate),
+  ]
 );
 
 /**
@@ -223,11 +204,7 @@ export const stockMovements = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Stock movement fields
     medicationId: uuid("medication_id")
@@ -253,16 +230,14 @@ export const stockMovements = pgTable(
     reason: text("reason"),
     notes: text("notes"),
   },
-  (table) => ({
-    medicationIdIdx: index("idx_stock_movement_medication_id").on(
-      table.medicationId
-    ),
-    batchIdIdx: index("idx_stock_movement_batch_id").on(table.batchId),
-    orgIdIdx: index("idx_stock_movement_org_id").on(table.organizationId),
-    branchIdIdx: index("idx_stock_movement_branch_id").on(table.branchId),
-    movementTypeIdx: index("idx_stock_movement_type").on(table.movementType),
-    createdAtIdx: index("idx_stock_movement_created_at").on(table.createdAt),
-  })
+  (table) => [
+    index("idx_stock_movement_medication_id").on(table.medicationId),
+    index("idx_stock_movement_batch_id").on(table.batchId),
+    index("idx_stock_movement_org_id").on(table.organizationId),
+    index("idx_stock_movement_branch_id").on(table.branchId),
+    index("idx_stock_movement_type").on(table.movementType),
+    index("idx_stock_movement_created_at").on(table.createdAt),
+  ]
 );
 
 /**
@@ -281,11 +256,7 @@ export const dispenses = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Dispense fields
     organizationId: uuid("organization_id")
@@ -317,17 +288,15 @@ export const dispenses = pgTable(
       length: 100,
     }),
   },
-  (table) => ({
-    orgIdIdx: index("idx_dispense_org_id").on(table.organizationId),
-    branchIdIdx: index("idx_dispense_branch_id").on(table.branchId),
-    patientIdIdx: index("idx_dispense_patient_id").on(table.patientId),
-    encounterIdIdx: index("idx_dispense_encounter_id").on(table.encounterId),
-    dispenseNumberIdx: uniqueIndex("idx_dispense_number").on(
-      table.dispenseNumber
-    ),
-    dispenseDateIdx: index("idx_dispense_date").on(table.dispenseDate),
-    statusIdx: index("idx_dispense_status").on(table.status),
-  })
+  (table) => [
+    index("idx_dispense_org_id").on(table.organizationId),
+    index("idx_dispense_branch_id").on(table.branchId),
+    index("idx_dispense_patient_id").on(table.patientId),
+    index("idx_dispense_encounter_id").on(table.encounterId),
+    uniqueIndex("idx_dispense_number").on(table.dispenseNumber),
+    index("idx_dispense_date").on(table.dispenseDate),
+    index("idx_dispense_status").on(table.status),
+  ]
 );
 
 /**
@@ -346,11 +315,7 @@ export const dispenseItems = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Dispense item fields
     dispenseId: uuid("dispense_id")
@@ -380,16 +345,14 @@ export const dispenseItems = pgTable(
     instructions: text("instructions"),
     notes: text("notes"),
   },
-  (table) => ({
-    dispenseIdIdx: index("idx_dispense_item_dispense_id").on(table.dispenseId),
-    medicationIdIdx: index("idx_dispense_item_medication_id").on(
-      table.medicationId
-    ),
-    batchIdIdx: index("idx_dispense_item_batch_id").on(table.batchId),
-    prescriptionItemIdIdx: index("idx_dispense_item_prescription_item_id").on(
+  (table) => [
+    index("idx_dispense_item_dispense_id").on(table.dispenseId),
+    index("idx_dispense_item_medication_id").on(table.medicationId),
+    index("idx_dispense_item_batch_id").on(table.batchId),
+    index("idx_dispense_item_prescription_item_id").on(
       table.prescriptionItemId
     ),
-  })
+  ]
 );
 
 /**
@@ -408,11 +371,7 @@ export const controlledSubstanceLogs = pgTable(
     deletedBy: uuid("deleted_by"),
 
     // BSON resource storage
-    resource: jsonb("resource").$type<{
-      version?: number;
-      bsonData?: Record<string, any>;
-      metadata?: Record<string, any>;
-    }>(),
+    resource: jsonb("resource").$type<BsonResource>(),
 
     // Controlled substance log fields
     medicationId: uuid("medication_id")
@@ -442,22 +401,14 @@ export const controlledSubstanceLogs = pgTable(
     reason: text("reason"),
     notes: text("notes"),
   },
-  (table) => ({
-    medicationIdIdx: index("idx_controlled_substance_log_medication_id").on(
-      table.medicationId
-    ),
-    batchIdIdx: index("idx_controlled_substance_log_batch_id").on(
-      table.batchId
-    ),
-    orgIdIdx: index("idx_controlled_substance_log_org_id").on(
-      table.organizationId
-    ),
-    branchIdIdx: index("idx_controlled_substance_log_branch_id").on(
-      table.branchId
-    ),
-    logTypeIdx: index("idx_controlled_substance_log_type").on(table.logType),
-    logDateIdx: index("idx_controlled_substance_log_date").on(table.logDate),
-  })
+  (table) => [
+    index("idx_controlled_substance_log_medication_id").on(table.medicationId),
+    index("idx_controlled_substance_log_batch_id").on(table.batchId),
+    index("idx_controlled_substance_log_org_id").on(table.organizationId),
+    index("idx_controlled_substance_log_branch_id").on(table.branchId),
+    index("idx_controlled_substance_log_type").on(table.logType),
+    index("idx_controlled_substance_log_date").on(table.logDate),
+  ]
 );
 
 // ============================================================================
