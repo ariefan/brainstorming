@@ -131,11 +131,22 @@ export const allergies = pgTable(
     }),
     verifiedAt: timestamp("verified_at"),
     notes: text("notes"),
+
+    // SatuSehat Integration
+    satusehatAllergyIntoleranceId: varchar("satusehat_allergy_intolerance_id", {
+      length: 100,
+    }),
+
+    // Sync Status - SatuSehat
+    isSatusehatSynced: boolean("is_satusehat_synced").default(false),
+    satusehatSyncedAt: timestamp("satusehat_synced_at"),
+    satusehatSyncError: text("satusehat_sync_error"),
   },
   (table) => [
     index("idx_allergy_patient_id").on(table.patientId),
     index("idx_allergy_type").on(table.allergyType),
     index("idx_allergy_severity").on(table.severity),
+    index("idx_allergy_satusehat_synced").on(table.isSatusehatSynced),
   ]
 );
 

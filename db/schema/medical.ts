@@ -21,6 +21,8 @@ import {
   prescriptionStatusEnum,
   dosageFormEnum,
   frequencyEnum,
+  procedureStatusEnum,
+  procedureCategoryEnum,
   BsonResource,
   fullFields,
   baseFields,
@@ -156,10 +158,19 @@ export const vitalSigns = pgTable(
       }>
     >(),
     notes: text("notes"),
+
+    // SatuSehat Integration (maps to FHIR Observation)
+    satusehatObservationId: varchar("satusehat_observation_id", { length: 100 }),
+
+    // Sync Status - SatuSehat
+    isSatusehatSynced: boolean("is_satusehat_synced").default(false),
+    satusehatSyncedAt: timestamp("satusehat_synced_at"),
+    satusehatSyncError: text("satusehat_sync_error"),
   },
   (table) => [
     index("idx_vital_signs_encounter_id").on(table.encounterId),
     index("idx_vital_signs_recorded_at").on(table.recordedAt),
+    index("idx_vital_signs_satusehat_synced").on(table.isSatusehatSynced),
   ]
 );
 
@@ -429,6 +440,67 @@ export const referrals = pgTable(
   (table) => [
     index("idx_referral_encounter_id").on(table.encounterId),
     uniqueIndex("idx_referral_number").on(table.referralNumber),
+  ]
+);
+
+/**
+ * Procedures table
+ * Represents clinical procedures (FHIR Procedure resource)
+ */
+export const procedures = pgTable(
+  "procedures",
+  {
+    ...fullFields,
+
+    // Procedure fields
+    encounterId: uuid("encounter_id")
+      .notNull()
+      .references(() => encounters.id, { onDelete: "cascade" }),
+    procedureNumber: varchar("procedure_number", { length: 30 })
+      .notNull()
+      .unique(),
+    status: procedureStatusEnum("status").default("completed"),
+    category: procedureCategoryEnum("category").notNull(),
+    icd9cmCode: varchar("icd9cm_code", { length: 10 }),
+    icd9cmDescription: varchar("icd9cm_description", { length: 255 }),
+    procedureName: varchar("procedure_name", { length: 255 }).notNull(),
+    procedureNameId: varchar("procedure_name_id", { length: 255 }),
+    performedAt: timestamp("performed_at").notNull(),
+    performedBy: uuid("performed_by")
+      .notNull()
+      .references(() => users.id, { onDelete: "set null" }),
+    assistedBy: uuid("assisted_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    location: varchar("location", { length: 100 }),
+    bodySite: varchar("body_site", { length: 100 }),
+    outcome: text("outcome"),
+    complication: text("complication"),
+    followUpRequired: boolean("follow_up_required").default(false),
+    notes: text("notes"),
+
+    // SatuSehat Integration
+    satusehatProcedureId: varchar("satusehat_procedure_id", { length: 100 }),
+
+    // Sync Status - SatuSehat
+    isSatusehatSynced: boolean("is_satusehat_synced").default(false),
+    satusehatSyncedAt: timestamp("satusehat_synced_at"),
+    satusehatSyncError: text("satusehat_sync_error"),
+
+    // Sync Status - JKN/BPJS
+    isJknSynced: boolean("is_jkn_synced").default(false),
+    jknSyncedAt: timestamp("jkn_synced_at"),
+    jknSyncError: text("jkn_sync_error"),
+  },
+  (table) => [
+    index("idx_procedure_encounter_id").on(table.encounterId),
+    uniqueIndex("idx_procedure_number").on(table.procedureNumber),
+    index("idx_procedure_status").on(table.status),
+    index("idx_procedure_category").on(table.category),
+    index("idx_procedure_icd9cm").on(table.icd9cmCode),
+    index("idx_procedure_performed_at").on(table.performedAt),
+    index("idx_procedure_satusehat_synced").on(table.isSatusehatSynced),
+    index("idx_procedure_jkn_synced").on(table.isJknSynced),
   ]
 );
 
@@ -708,11 +780,22 @@ export const immunizations = pgTable(
     adverseEvent: text("adverse_event"),
     nextDoseDate: date("next_dose_date"),
     notes: text("notes"),
+
+    // SatuSehat Integration
+    satusehatImmunizationId: varchar("satusehat_immunization_id", {
+      length: 100,
+    }),
+
+    // Sync Status - SatuSehat
+    isSatusehatSynced: boolean("is_satusehat_synced").default(false),
+    satusehatSyncedAt: timestamp("satusehat_synced_at"),
+    satusehatSyncError: text("satusehat_sync_error"),
   },
   (table) => [
     index("idx_immunization_patient_id").on(table.patientId),
     index("idx_immunization_encounter_id").on(table.encounterId),
     index("idx_immunization_type").on(table.immunizationType),
+    index("idx_immunization_satusehat_synced").on(table.isSatusehatSynced),
   ]
 );
 
@@ -760,6 +843,7 @@ export const encountersRelations = relations(encounters, ({ many }) => ({
   consultations: many(consultations),
   diagnoses: many(diagnoses),
   prescriptions: many(prescriptions),
+  procedures: many(procedures),
   medicalLabOrders: many(medicalLabOrders),
   referrals: many(referrals),
   medicalCertificates: many(medicalCertificates),
@@ -783,6 +867,13 @@ export const consultationsRelations = relations(consultations, ({ one }) => ({
 export const diagnosesRelations = relations(diagnoses, ({ one }) => ({
   encounter: one(encounters, {
     fields: [diagnoses.encounterId],
+    references: [encounters.id],
+  }),
+}));
+
+export const proceduresRelations = relations(procedures, ({ one }) => ({
+  encounter: one(encounters, {
+    fields: [procedures.encounterId],
     references: [encounters.id],
   }),
 }));

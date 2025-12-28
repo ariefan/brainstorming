@@ -7,7 +7,20 @@
       "Bash(bc:*)",
       "Bash(npx tsc:*)",
       "Bash(PGPASSWORD=postgres psql:*)",
-      "Bash(npx drizzle-kit push)"
+      "Bash(npx drizzle-kit push)",
+      "Bash(for f in db/schema/*.ts)",
+      "Bash(do if grep -q \"pgTable\" \"$f\")",
+      "Bash(! grep -q \"organizationId\" \"$f\")",
+      "Bash(then echo \"$f\")",
+      "Bash(fi)",
+      "Bash(done)",
+      "Bash(cat:*)",
+      "Bash(git checkout:*)",
+      "Bash(python3:*)",
+      "Bash(python:*)",
+      "Bash(node:*)",
+      "Bash(npx drizzle-kit generate:*)",
+      "Bash(npx drizzle-kit:*)"
     ]
   }
 }

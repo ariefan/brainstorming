@@ -27,6 +27,9 @@ export * from "./appointments";
 // Medical services tables (general, dental, KIA)
 export * from "./medical";
 
+// Initial assessment tables (Kajian Awal)
+export * from "./assessments";
+
 // Inpatient tables
 export * from "./inpatient";
 
@@ -38,6 +41,21 @@ export * from "./laboratory";
 
 // Billing and payment tables
 export * from "./billing";
+
+// HR and Payroll tables
+export * from "./hr";
+
+// Audit and compliance tables
+export * from "./audit";
+
+// SaaS infrastructure tables
+export * from "./saas";
+
+// Notification tables
+export * from "./notifications";
+
+// Document and file management tables
+export * from "./documents";
 
 // SatuSehat FHIR R4 integration tables
 export * from "./satusehat";

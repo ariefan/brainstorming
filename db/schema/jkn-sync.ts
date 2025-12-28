@@ -7,6 +7,7 @@ import {
   timestamp,
   jsonb,
   index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import {
@@ -16,6 +17,8 @@ import {
   jknSyncOperationEnum,
   jknErrorCategoryEnum,
   jknErrorResolutionEnum,
+  webhookStatusEnum,
+  webhookSourceEnum,
   fullFields,
 } from "./core";
 import { organizations } from "./organization";
@@ -77,6 +80,10 @@ export const jknSyncQueue = pgTable(
     maxAttempts: integer("max_attempts").default(3),
     lastAttemptAt: timestamp("last_attempt_at"),
     nextRetryAt: timestamp("next_retry_at"),
+
+    // Retry Backoff Configuration
+    baseRetryDelayMs: integer("base_retry_delay_ms").default(60000), // 1 minute base delay
+    retryBackoffMultiplier: integer("retry_backoff_multiplier").default(2), // Exponential backoff
 
     // Error Tracking
     errorCode: varchar("error_code", { length: 20 }),
@@ -180,6 +187,61 @@ export const jknErrorLogs = pgTable(
   ]
 );
 
+/**
+ * JKN Webhooks table
+ * Stores incoming webhook events from JKN/BPJS APIs
+ * (e.g., claim status updates, antrean notifications)
+ */
+export const jknWebhooks = pgTable(
+  "jkn_webhooks",
+  {
+    ...fullFields,
+
+    // Organization/Branch (multi-tenant)
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    branchId: uuid("branch_id").references(() => organizations.id, {
+      onDelete: "set null",
+    }),
+
+    // Webhook Identification
+    webhookId: varchar("webhook_id", { length: 100 }).notNull().unique(),
+    source: webhookSourceEnum("source").notNull(),
+    eventType: varchar("event_type", { length: 100 }).notNull(),
+    apiType: jknApiTypeEnum("api_type").notNull(),
+    resourceType: jknSyncResourceTypeEnum("resource_type"),
+    externalId: varchar("external_id", { length: 100 }), // noSep, noRujukan, etc.
+
+    // Webhook Data
+    headers: jsonb("headers").$type<Record<string, string>>(),
+    payload: jsonb("payload").$type<Record<string, any>>().notNull(),
+
+    // Processing Status
+    status: webhookStatusEnum("status").default("received"),
+    processedAt: timestamp("processed_at"),
+    processingError: text("processing_error"),
+
+    // Correlation to local resources
+    localResourceId: uuid("local_resource_id"),
+    syncQueueId: uuid("sync_queue_id").references(() => jknSyncQueue.id, {
+      onDelete: "set null",
+    }),
+
+    notes: text("notes"),
+  },
+  (table) => [
+    index("idx_jkn_webhook_org_id").on(table.organizationId),
+    index("idx_jkn_webhook_branch_id").on(table.branchId),
+    uniqueIndex("idx_jkn_webhook_id").on(table.webhookId),
+    index("idx_jkn_webhook_source").on(table.source),
+    index("idx_jkn_webhook_api_type").on(table.apiType),
+    index("idx_jkn_webhook_event_type").on(table.eventType),
+    index("idx_jkn_webhook_status").on(table.status),
+    index("idx_jkn_webhook_created_at").on(table.createdAt),
+  ]
+);
+
 // ============================================================================
 // RELATIONS
 // ============================================================================
@@ -211,5 +273,20 @@ export const jknErrorLogsRelations = relations(jknErrorLogs, ({ one }) => ({
   resolvedByUser: one(users, {
     fields: [jknErrorLogs.resolvedBy],
     references: [users.id],
+  }),
+}));
+
+export const jknWebhooksRelations = relations(jknWebhooks, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [jknWebhooks.organizationId],
+    references: [organizations.id],
+  }),
+  branch: one(organizations, {
+    fields: [jknWebhooks.branchId],
+    references: [organizations.id],
+  }),
+  syncQueue: one(jknSyncQueue, {
+    fields: [jknWebhooks.syncQueueId],
+    references: [jknSyncQueue.id],
   }),
 }));

@@ -22,6 +22,7 @@ import {
   satusehatConsentMethodEnum,
   satusehatLookupStatusEnum,
   satusehatVerificationMethodEnum,
+  webhookStatusEnum,
   BsonResource,
   fullFields,
   baseFields,
@@ -209,8 +210,14 @@ export const satusehatSyncQueue = pgTable(
     status: satusehatSyncStatusEnum("status").default("pending"),
     priority: integer("priority").default(0),
     attempts: integer("attempts").default(0),
+    maxAttempts: integer("max_attempts").default(3),
     lastAttemptAt: timestamp("last_attempt_at"),
     nextRetryAt: timestamp("next_retry_at"),
+
+    // Retry Backoff Configuration
+    baseRetryDelayMs: integer("base_retry_delay_ms").default(60000), // 1 minute base delay
+    retryBackoffMultiplier: integer("retry_backoff_multiplier").default(2), // Exponential backoff
+
     errorMessage: text("error_message"),
     completedAt: timestamp("completed_at"),
     notes: text("notes"),
@@ -305,6 +312,58 @@ export const satusehatConsents = pgTable(
   ]
 );
 
+/**
+ * SatuSehat webhooks table
+ * Stores incoming webhook events from SatuSehat
+ * (e.g., claim status updates, notification events)
+ */
+export const satusehatWebhooks = pgTable(
+  "satusehat_webhooks",
+  {
+    ...fullFields,
+
+    // Organization/Branch (multi-tenant)
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    branchId: uuid("branch_id").references(() => organizations.id, {
+      onDelete: "set null",
+    }),
+
+    // Webhook Identification
+    webhookId: varchar("webhook_id", { length: 100 }).notNull().unique(),
+    eventType: varchar("event_type", { length: 100 }).notNull(),
+    resourceType: satusehatResourceTypeEnum("resource_type"),
+    resourceId: varchar("resource_id", { length: 100 }),
+
+    // Webhook Data
+    headers: jsonb("headers").$type<Record<string, string>>(),
+    payload: jsonb("payload").$type<Record<string, any>>().notNull(),
+
+    // Processing Status
+    status: webhookStatusEnum("status").default("received"),
+    processedAt: timestamp("processed_at"),
+    processingError: text("processing_error"),
+
+    // Correlation to local resources
+    localResourceId: uuid("local_resource_id"),
+    syncQueueId: uuid("sync_queue_id").references(() => satusehatSyncQueue.id, {
+      onDelete: "set null",
+    }),
+
+    notes: text("notes"),
+  },
+  (table) => [
+    index("idx_satusehat_webhook_org_id").on(table.organizationId),
+    index("idx_satusehat_webhook_branch_id").on(table.branchId),
+    uniqueIndex("idx_satusehat_webhook_id").on(table.webhookId),
+    index("idx_satusehat_webhook_event_type").on(table.eventType),
+    index("idx_satusehat_webhook_resource_type").on(table.resourceType),
+    index("idx_satusehat_webhook_status").on(table.status),
+    index("idx_satusehat_webhook_created_at").on(table.createdAt),
+  ]
+);
+
 // ============================================================================
 // RELATIONS
 // ============================================================================
@@ -396,6 +455,24 @@ export const satusehatConsentsRelations = relations(
     revokedBy: one(users, {
       fields: [satusehatConsents.revokedBy],
       references: [users.id],
+    }),
+  })
+);
+
+export const satusehatWebhooksRelations = relations(
+  satusehatWebhooks,
+  ({ one }) => ({
+    organization: one(organizations, {
+      fields: [satusehatWebhooks.organizationId],
+      references: [organizations.id],
+    }),
+    branch: one(organizations, {
+      fields: [satusehatWebhooks.branchId],
+      references: [organizations.id],
+    }),
+    syncQueue: one(satusehatSyncQueue, {
+      fields: [satusehatWebhooks.syncQueueId],
+      references: [satusehatSyncQueue.id],
     }),
   })
 );

@@ -1003,6 +1003,286 @@ export const jknErrorResolutionEnum = pgEnum("jkn_error_resolution", [
   "ignored",
 ]);
 
+
+
+
+// ============================================================================
+// WEBHOOK ENUMS
+// ============================================================================
+
+export const webhookStatusEnum = pgEnum("webhook_status", [
+  "received",
+  "processing",
+  "processed",
+  "failed",
+  "ignored",
+]);
+
+export const webhookSourceEnum = pgEnum("webhook_source", [
+  "satusehat",
+  "jkn_vclaim",
+  "jkn_antrean",
+  "jkn_apotek",
+  "jkn_aplicares",
+  "jkn_icare",
+  "jkn_rekam_medis",
+]);
+
+// ============================================================================
+// PROCEDURE ENUMS
+// ============================================================================
+
+export const procedureStatusEnum = pgEnum("procedure_status", [
+  "preparation",
+  "in_progress",
+  "not_done",
+  "on_hold",
+  "stopped",
+  "completed",
+  "entered_in_error",
+  "unknown",
+]);
+
+export const procedureCategoryEnum = pgEnum("procedure_category", [
+  "surgical",
+  "diagnostic",
+  "therapeutic",
+  "preventive",
+  "palliative",
+  "other",
+]);
+
+// ============================================================================
+// HR/PAYROLL ENUMS
+// ============================================================================
+
+export const employmentTypeEnum = pgEnum("employment_type", [
+  "full_time",
+  "part_time",
+  "contract",
+  "internship",
+]);
+
+export const employmentStatusEnum = pgEnum("employment_status", [
+  "active",
+  "on_leave",
+  "suspended",
+  "terminated",
+  "resigned",
+]);
+
+export const leaveTypeEnum = pgEnum("leave_type", [
+  "annual",
+  "sick",
+  "maternity",
+  "paternity",
+  "unpaid",
+  "emergency",
+  "other",
+]);
+
+export const leaveStatusEnum = pgEnum("leave_status", [
+  "pending",
+  "approved",
+  "rejected",
+  "cancelled",
+]);
+
+export const payrollStatusEnum = pgEnum("payroll_status", [
+  "draft",
+  "pending_approval",
+  "approved",
+  "processing",
+  "paid",
+  "cancelled",
+]);
+
+export const attendanceStatusEnum = pgEnum("attendance_status", [
+  "present",
+  "absent",
+  "late",
+  "early_leave",
+  "half_day",
+  "on_leave",
+]);
+
+export const salaryComponentTypeEnum = pgEnum("salary_component_type", [
+  "earning",
+  "deduction",
+  "benefit",
+]);
+
+// ============================================================================
+// AUDIT LOG ENUMS
+// ============================================================================
+
+export const auditResourceTypeEnum = pgEnum("audit_resource_type", [
+  "patient",
+  "encounter",
+  "diagnosis",
+  "prescription",
+  "lab_result",
+  "vital_sign",
+  "procedure",
+  "immunization",
+  "allergy",
+  "appointment",
+  "invoice",
+  "payment",
+  "user",
+  "employee",
+  "payroll",
+  "report",
+  "sep",
+  "rujukan",
+  "satusehat_resource",
+  "system_config",
+  "other",
+]);
+
+// ============================================================================
+// SAAS INFRASTRUCTURE ENUMS
+// ============================================================================
+
+// Subscription billing cycle
+export const billingCycleEnum = pgEnum("billing_cycle", [
+  "monthly",
+  "quarterly",
+  "yearly",
+]);
+
+// Subscription status
+export const subscriptionStatusEnum = pgEnum("subscription_status", [
+  "trial",
+  "active",
+  "past_due",
+  "cancelled",
+  "suspended",
+  "expired",
+]);
+
+// Feature flag status
+export const featureFlagStatusEnum = pgEnum("feature_flag_status", [
+  "enabled",
+  "disabled",
+  "beta",
+]);
+
+// Notification channel
+export const notificationChannelEnum = pgEnum("notification_channel", [
+  "in_app",
+  "email",
+  "sms",
+  "whatsapp",
+  "push",
+]);
+
+// Notification status
+export const notificationStatusEnum = pgEnum("notification_status", [
+  "pending",
+  "sent",
+  "delivered",
+  "read",
+  "failed",
+]);
+
+// Notification priority
+export const notificationPriorityEnum = pgEnum("notification_priority", [
+  "low",
+  "normal",
+  "high",
+  "urgent",
+]);
+
+// Document type
+export const documentTypeEnum = pgEnum("document_type", [
+  "medical_record",
+  "lab_result",
+  "prescription",
+  "consent_form",
+  "id_card",
+  "insurance_card",
+  "referral_letter",
+  "medical_certificate",
+  "invoice",
+  "receipt",
+  "other",
+]);
+
+// Document status
+export const documentStatusEnum = pgEnum("document_status", [
+  "uploading",
+  "processing",
+  "ready",
+  "archived",
+  "deleted",
+]);
+
+// Virus scan status
+export const virusScanStatusEnum = pgEnum("virus_scan_status", [
+  "pending",
+  "scanning",
+  "clean",
+  "infected",
+  "failed",
+]);
+
+// File access level
+export const fileAccessEnum = pgEnum("file_access", ["private", "public"]);
+
+// ============================================================================
+// INITIAL ASSESSMENT ENUMS
+// ============================================================================
+
+// Triage level (visual screening - Skrining Visual)
+export const triageLevelEnum = pgEnum("triage_level", [
+  "red", // Emergency - unconscious, no breathing, no pulse, seizures
+  "orange", // Urgent - severe pain, chest pain
+  "yellow", // Semi-urgent - pale, weakness, unsteady
+  "green", // Non-urgent - stable condition
+]);
+
+// Assessment type
+export const assessmentTypeEnum = pgEnum("assessment_type", [
+  "initial", // Kajian Awal
+  "periodic", // Kajian Ulang
+  "pre_operative", // Pra-operasi
+  "discharge", // Pulang
+]);
+
+// Pain scale type
+export const painScaleTypeEnum = pgEnum("pain_scale_type", [
+  "vas", // Visual Analog Scale (adults)
+  "flacc", // Face-Legs-Activity-Cry-Consolability (children <6)
+  "wong_baker", // Wong-Baker FACES (children 3-8)
+  "numeric", // Numeric Rating Scale
+]);
+
+// Psychology status
+export const psychologyStatusEnum = pgEnum("psychology_status", [
+  "normal",
+  "depression",
+  "fear",
+  "aggressive",
+  "self_harm_risk",
+  "other",
+]);
+
+// Birth method (for pediatric assessment)
+export const birthMethodEnum = pgEnum("birth_method", [
+  "spontaneous",
+  "cesarean",
+  "vacuum",
+  "forceps",
+]);
+
+// Gestational status (for pediatric assessment)
+export const gestationalStatusEnum = pgEnum("gestational_status", [
+  "full_term", // Cukup bulan (≥37 weeks)
+  "preterm", // Kurang bulan (<37 weeks)
+  "post_term", // Lebih bulan (>42 weeks)
+]);
+
 // ============================================================================
 // BASE TABLE FIELDS - Common field definitions for all tables
 // ============================================================================
