@@ -30,6 +30,9 @@ export * from "./medical";
 // Initial assessment tables (Kajian Awal)
 export * from "./assessments";
 
+// Accreditation tables (SNARS, KARS, quality indicators, PPI)
+export * from "./accreditation";
+
 // Inpatient tables
 export * from "./inpatient";
 

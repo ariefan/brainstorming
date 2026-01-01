@@ -1284,6 +1284,166 @@ export const gestationalStatusEnum = pgEnum("gestational_status", [
 ]);
 
 // ============================================================================
+// INDONESIAN ACCREDITATION ENUMS
+// ============================================================================
+
+// Accreditation body type (SNARS for hospitals, KARS for clinics/puskesmas)
+export const accreditationBodyEnum = pgEnum("accreditation_body", [
+  "snars", // Standar Nasional Akreditasi Rumah Sakit (Hospital)
+  "kars", // Komisi Akreditasi Rumah Sakit (Hospital)
+  "kemenkes_klinik", // Kementerian Kesehatan (Clinic)
+  "kemenkes_puskesmas", // Kementerian Kesehatan (Puskesmas)
+]);
+
+// Accreditation level
+export const accreditationLevelEnum = pgEnum("accreditation_level", [
+  "not_accredited",
+  "basic", // Dasar
+  "intermediate", // Madya
+  "advanced", // Utama
+  "excellent", // Paripurna
+]);
+
+// Accreditation status
+export const accreditationStatusEnum = pgEnum("accreditation_status", [
+  "not_started",
+  "in_preparation",
+  "submitted",
+  "under_review",
+  "accredited",
+  "conditional",
+  "expired",
+  "revoked",
+]);
+
+// Quality indicator category
+export const qualityIndicatorCategoryEnum = pgEnum(
+  "quality_indicator_category",
+  [
+    "patient_safety", // Sasaran Keselamatan Pasien (SKP)
+    "clinical_outcome", // Indikator Klinis
+    "operational", // Indikator Operasional
+    "patient_experience", // Indikator Pengalaman Pasien
+    "infection_control", // Pencegahan dan Pengendalian Infeksi (PPI)
+    "medication_safety", // Keselamatan Obat
+    "surgical_safety", // Keselamatan Bedah
+    "maternal_child", // Kesehatan Ibu dan Anak (KIA)
+    "emergency", // Gawat Darurat
+    "laboratory", // Laboratorium
+    "radiology", // Radiologi
+  ]
+);
+
+// Patient safety incident severity
+export const incidentSeverityEnum = pgEnum("incident_severity", [
+  "near_miss", // Kejadian Nyaris Cedera (KNC)
+  "no_harm", // Kejadian Tidak Cedera (KTC)
+  "mild", // Kejadian Tidak Diharapkan (KTD) - Ringan
+  "moderate", // KTD - Sedang
+  "severe", // KTD - Berat
+  "sentinel", // Kejadian Sentinel
+]);
+
+// Incident status
+export const incidentStatusEnum = pgEnum("incident_status", [
+  "reported",
+  "investigating",
+  "analyzed",
+  "action_planned",
+  "action_implemented",
+  "closed",
+]);
+
+// Clinical audit status
+export const clinicalAuditStatusEnum = pgEnum("clinical_audit_status", [
+  "planned",
+  "in_progress",
+  "completed",
+  "follow_up",
+  "closed",
+]);
+
+// Clinical audit type
+export const clinicalAuditTypeEnum = pgEnum("clinical_audit_type", [
+  "medical_record", // Audit Rekam Medis
+  "infection_control", // Audit PPI
+  "medication", // Audit Obat
+  "surgical", // Audit Bedah
+  "mortality", // Audit Kematian
+  "morbidity", // Audit Morbiditas
+  "compliance", // Audit Kepatuhan
+  "pathway", // Audit Clinical Pathway
+]);
+
+// Credential type for practitioners
+export const credentialTypeEnum = pgEnum("credential_type", [
+  "str", // Surat Tanda Registrasi
+  "sip", // Surat Izin Praktik
+  "sik", // Surat Izin Kerja (for nurses)
+  "sipb", // Surat Izin Praktik Bidan
+  "sipa", // Surat Izin Praktik Apoteker
+  "serkom", // Sertifikat Kompetensi
+  "certificate", // Sertifikat Pelatihan
+  "bls", // Basic Life Support
+  "acls", // Advanced Cardiac Life Support
+  "atls", // Advanced Trauma Life Support
+]);
+
+// Credential status
+export const credentialStatusEnum = pgEnum("credential_status", [
+  "pending",
+  "verified",
+  "active",
+  "expiring_soon", // < 90 days
+  "expired",
+  "revoked",
+  "suspended",
+]);
+
+// Document control status (for accreditation documents)
+export const documentControlStatusEnum = pgEnum("document_control_status", [
+  "draft",
+  "under_review",
+  "approved",
+  "published",
+  "superseded",
+  "obsolete",
+]);
+
+// Document control type
+export const documentControlTypeEnum = pgEnum("document_control_type", [
+  "policy", // Kebijakan
+  "pedoman", // Pedoman
+  "panduan", // Panduan
+  "spo", // Standar Prosedur Operasional
+  "form", // Formulir
+  "checklist", // Daftar Tilik
+  "register", // Register
+]);
+
+// Infection control category
+export const infectionControlCategoryEnum = pgEnum(
+  "infection_control_category",
+  [
+    "hai", // Healthcare Associated Infection
+    "iad", // Infeksi Aliran Darah
+    "isk", // Infeksi Saluran Kemih
+    "vap", // Ventilator Associated Pneumonia
+    "ssi", // Surgical Site Infection
+    "phlebitis", // Phlebitis
+    "decubitus", // Dekubitus
+    "bundle_compliance", // Kepatuhan Bundle
+    "hand_hygiene", // Kepatuhan Cuci Tangan
+  ]
+);
+
+// Infection surveillance status
+export const infectionSurveillanceStatusEnum = pgEnum(
+  "infection_surveillance_status",
+  ["suspected", "confirmed", "ruled_out", "resolved"]
+);
+
+// ============================================================================
 // BASE TABLE FIELDS - Common field definitions for all tables
 // ============================================================================
 

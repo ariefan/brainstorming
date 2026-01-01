@@ -33,7 +33,7 @@ import {
   bsonFields,
   softDeleteFields,
 } from "./core";
-import { organizations } from "./organization";
+import { organizations, branches } from "./organization";
 import { users } from "./users";
 import { patients } from "./patients";
 
@@ -54,7 +54,7 @@ export const serviceTariffs = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
     category: serviceTariffCategoryEnum("category").notNull(),
@@ -89,7 +89,7 @@ export const charges = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
     patientId: uuid("patient_id")
@@ -140,7 +140,7 @@ export const chargeAdjustments = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
     chargeId: uuid("charge_id")
@@ -180,7 +180,7 @@ export const invoices = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
     patientId: uuid("patient_id")
@@ -203,6 +203,17 @@ export const invoices = pgTable(
     balance: numeric("balance", { precision: 15, scale: 2 }).notNull(),
     status: invoiceStatusEnum("status").default("draft"),
     notes: text("notes"),
+
+    // Approval tracking (for accreditation compliance)
+    approvedAt: timestamp("approved_at"),
+    approvedBy: uuid("approved_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    voidedAt: timestamp("voided_at"),
+    voidedBy: uuid("voided_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    voidReason: text("void_reason"),
   },
   (table) => [
     index("idx_invoice_org_id").on(table.organizationId),
@@ -229,7 +240,7 @@ export const payments = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
     patientId: uuid("patient_id")
@@ -247,6 +258,15 @@ export const payments = pgTable(
     cardNumber: varchar("card_number", { length: 20 }),
     status: paymentStatusEnum("status").default("completed"),
     notes: text("notes"),
+
+    // Verification tracking (for accreditation compliance)
+    verifiedAt: timestamp("verified_at"),
+    verifiedBy: uuid("verified_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    receivedBy: uuid("received_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
   },
   (table) => [
     index("idx_payment_org_id").on(table.organizationId),
@@ -273,7 +293,7 @@ export const deposits = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
     patientId: uuid("patient_id")
@@ -310,7 +330,7 @@ export const depositApplications = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
     depositId: uuid("deposit_id")
@@ -343,7 +363,7 @@ export const refunds = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
     patientId: uuid("patient_id")
@@ -358,6 +378,21 @@ export const refunds = pgTable(
     reason: text("reason").notNull(),
     status: refundStatusEnum("status").default("pending"),
     notes: text("notes"),
+
+    // Approval tracking (for accreditation compliance)
+    approvedAt: timestamp("approved_at"),
+    approvedBy: uuid("approved_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    processedAt: timestamp("processed_at"),
+    processedBy: uuid("processed_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    rejectedAt: timestamp("rejected_at"),
+    rejectedBy: uuid("rejected_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    rejectionReason: text("rejection_reason"),
   },
   (table) => [
     index("idx_refund_org_id").on(table.organizationId),
@@ -385,7 +420,7 @@ export const cashClosings = pgTable(
       .references(() => organizations.id, { onDelete: "cascade" }),
     branchId: uuid("branch_id")
       .notNull()
-      .references(() => organizations.id, { onDelete: "cascade" }),
+      .references(() => branches.id, { onDelete: "cascade" }),
     cashierId: uuid("cashier_id")
       .notNull()
       .references(() => users.id, { onDelete: "set null" }),
@@ -534,9 +569,9 @@ export const cashClosingsRelations = relations(cashClosings, ({ one }) => ({
     fields: [cashClosings.organizationId],
     references: [organizations.id],
   }),
-  branch: one(organizations, {
+  branch: one(branches, {
     fields: [cashClosings.branchId],
-    references: [organizations.id],
+    references: [branches.id],
   }),
   cashier: one(users, {
     fields: [cashClosings.cashierId],

@@ -23,7 +23,7 @@ import {
   bsonFields,
   softDeleteFields,
 } from "./core";
-import { organizations } from "./organization";
+import { organizations, branches } from "./organization";
 import { users } from "./users";
 
 // ============================================================================
@@ -43,7 +43,7 @@ export const polyclinics = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
     polyclinicCode: varchar("polyclinic_code", { length: 20 }).notNull(),
@@ -107,7 +107,7 @@ export const practitioners = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
     practitionerNumber: varchar("practitioner_number", { length: 30 })
@@ -310,8 +310,32 @@ export const appointmentSlots = pgTable(
     index("idx_appointment_slot_date").on(table.slotDate),
     index("idx_appointment_slot_available").on(table.isAvailable),
     index("idx_appointment_slot_booked").on(table.isBooked),
+    // Prevent double-booking: ensure unique slot per practitioner/polyclinic/date/time
+    uniqueIndex("idx_appointment_slot_unique").on(
+      table.practitionerId,
+      table.polyclinicId,
+      table.slotDate,
+      table.startTime
+    ),
   ]
 );
+
+// ============================================================================
+// TYPE EXPORTS FOR REPOSITORIES
+// ============================================================================
+
+export type PolyclinicRow = typeof polyclinics.$inferSelect;
+export type NewPolyclinicRow = typeof polyclinics.$inferInsert;
+export type PractitionerRow = typeof practitioners.$inferSelect;
+export type NewPractitionerRow = typeof practitioners.$inferInsert;
+export type PractitionerPolyclinicRow = typeof practitionerPolyclinics.$inferSelect;
+export type NewPractitionerPolyclinicRow = typeof practitionerPolyclinics.$inferInsert;
+export type PractitionerScheduleRow = typeof practitionerSchedules.$inferSelect;
+export type NewPractitionerScheduleRow = typeof practitionerSchedules.$inferInsert;
+export type ScheduleExceptionRow = typeof scheduleExceptions.$inferSelect;
+export type NewScheduleExceptionRow = typeof scheduleExceptions.$inferInsert;
+export type AppointmentSlotRow = typeof appointmentSlots.$inferSelect;
+export type NewAppointmentSlotRow = typeof appointmentSlots.$inferInsert;
 
 // ============================================================================
 // RELATIONS

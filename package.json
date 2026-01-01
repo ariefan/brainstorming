@@ -1,11 +1,25 @@
 {
-	"dependencies": {
-		"drizzle-orm": "^0.45.1"
-	},
-	"devDependencies": {
-		"@types/node": "^25.0.3",
-		"drizzle-kit": "^0.31.8",
-		"pg": "^8.16.3",
-		"typescript": "^5.9.3"
-	}
+  "scripts": {
+    "build": "tsp compile ./contracts/spec && pnpm generate",
+    "build:tsp": "tsp compile ./contracts/spec",
+    "generate": "openapi-ts",
+    "watch": "tsp compile ./contracts/spec --watch"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.80.7",
+    "drizzle-orm": "^0.45.1",
+    "zod": "^4.2.0"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "^0.89.1",
+    "@types/node": "^25.0.3",
+    "@types/pg": "^8.16.0",
+    "@typespec/compiler": "^1.7.1",
+    "@typespec/http": "^1.7.0",
+    "@typespec/openapi3": "^1.7.0",
+    "@typespec/rest": "^0.77.0",
+    "drizzle-kit": "^0.31.8",
+    "pg": "^8.16.3",
+    "typescript": "^5.9.3"
+  }
 }

@@ -29,7 +29,7 @@ import {
   bsonFields,
   softDeleteFields,
 } from "./core";
-import { organizations } from "./organization";
+import { organizations, branches } from "./organization";
 import { users } from "./users";
 import { patients } from "./patients";
 import { practitioners } from "./practitioners";
@@ -51,7 +51,7 @@ export const satusehatConfigs = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
     environment: satusehatEnvironmentEnum("environment").notNull(),
@@ -156,7 +156,7 @@ export const patientIhsLookups = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
     patientId: uuid("patient_id")
@@ -199,7 +199,7 @@ export const satusehatSyncQueue = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
     resourceType: satusehatResourceTypeEnum("resource_type").notNull(),
@@ -244,7 +244,7 @@ export const satusehatErrorLogs = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
     resourceType: satusehatResourceTypeEnum("resource_type").notNull(),
@@ -284,7 +284,7 @@ export const satusehatConsents = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
     patientId: uuid("patient_id")
@@ -326,7 +326,7 @@ export const satusehatWebhooks = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
 
@@ -379,9 +379,19 @@ export const satusehatConfigsRelations = relations(
 export const satusehatLocationsRelations = relations(
   satusehatLocations,
   ({ one }) => ({
-    config: one(satusehatConfigs, {
-      fields: [satusehatLocations.organizationId, satusehatLocations.branchId],
-      references: [satusehatConfigs.organizationId, satusehatConfigs.branchId],
+    organization: one(organizations, {
+      fields: [satusehatLocations.organizationId],
+      references: [organizations.id],
+    }),
+    branch: one(organizations, {
+      fields: [satusehatLocations.branchId],
+      references: [organizations.id],
+      relationName: "satusehatLocationsBranch",
+    }),
+    localLocation: one(organizations, {
+      fields: [satusehatLocations.localLocationId],
+      references: [organizations.id],
+      relationName: "satusehatLocationsLocal",
     }),
   })
 );
@@ -389,12 +399,14 @@ export const satusehatLocationsRelations = relations(
 export const satusehatPractitionersRelations = relations(
   satusehatPractitioners,
   ({ one }) => ({
-    config: one(satusehatConfigs, {
-      fields: [
-        satusehatPractitioners.organizationId,
-        satusehatPractitioners.branchId,
-      ],
-      references: [satusehatConfigs.organizationId, satusehatConfigs.branchId],
+    organization: one(organizations, {
+      fields: [satusehatPractitioners.organizationId],
+      references: [organizations.id],
+    }),
+    branch: one(organizations, {
+      fields: [satusehatPractitioners.branchId],
+      references: [organizations.id],
+      relationName: "satusehatPractitionersBranch",
     }),
     practitioner: one(practitioners, {
       fields: [satusehatPractitioners.localPractitionerId],
@@ -421,8 +433,13 @@ export const satusehatSyncQueueRelations = relations(
   satusehatSyncQueue,
   ({ one }) => ({
     organization: one(organizations, {
-      fields: [satusehatSyncQueue.organizationId, satusehatSyncQueue.branchId],
-      references: [organizations.id, organizations.id],
+      fields: [satusehatSyncQueue.organizationId],
+      references: [organizations.id],
+    }),
+    branch: one(organizations, {
+      fields: [satusehatSyncQueue.branchId],
+      references: [organizations.id],
+      relationName: "satusehatSyncQueueBranch",
     }),
   })
 );
@@ -431,8 +448,13 @@ export const satusehatErrorLogsRelations = relations(
   satusehatErrorLogs,
   ({ one }) => ({
     organization: one(organizations, {
-      fields: [satusehatErrorLogs.organizationId, satusehatErrorLogs.branchId],
-      references: [organizations.id, organizations.id],
+      fields: [satusehatErrorLogs.organizationId],
+      references: [organizations.id],
+    }),
+    branch: one(organizations, {
+      fields: [satusehatErrorLogs.branchId],
+      references: [organizations.id],
+      relationName: "satusehatErrorLogsBranch",
     }),
     resolvedBy: one(users, {
       fields: [satusehatErrorLogs.resolvedBy],

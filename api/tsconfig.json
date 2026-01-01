@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "paths": {
+      "contracts": ["../contracts/src/index.ts"],
+      "contracts/*": ["../contracts/src/*"],
+      "db": ["../db/index.ts"],
+      "db/*": ["../db/*"]
+    },
+    "baseUrl": "."
+  },
+  "include": [
+    "src/app-standalone.ts",
+    "src/index-standalone.ts",
+    "src/lib/**/*",
+    "src/modules/auth/**/*",
+    "src/modules/health/**/*",
+    "src/modules/patients/**/*",
+    "src/modules/practitioners/**/*",
+    "src/modules/appointments/**/*",
+    "src/modules/encounters/**/*",
+    "../contracts/src/**/*",
+    "../db/**/*"
+  ],
+  "exclude": ["node_modules", "dist"]
+}

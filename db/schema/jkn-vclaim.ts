@@ -33,7 +33,7 @@ import {
   bpjsPesertaStatusEnum,
   fullFields,
 } from "./core";
-import { organizations } from "./organization";
+import { organizations, branches } from "./organization";
 import { users } from "./users";
 import { patients } from "./patients";
 import { encounters } from "./medical";
@@ -58,7 +58,7 @@ export const jknSep = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
 
@@ -200,7 +200,7 @@ export const jknRujukan = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
 
@@ -295,7 +295,7 @@ export const jknPeserta = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
 
@@ -365,7 +365,7 @@ export const jknKunjungan = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
 
@@ -435,7 +435,7 @@ export const jknInacbg = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
 
@@ -579,7 +579,7 @@ export const jknMonitoringKlaim = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
 

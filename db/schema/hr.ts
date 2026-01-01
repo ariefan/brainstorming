@@ -22,7 +22,7 @@ import {
   salaryComponentTypeEnum,
   fullFields,
 } from "./core";
-import { organizations } from "./organization";
+import { organizations, branches } from "./organization";
 import { users } from "./users";
 
 // ============================================================================
@@ -44,7 +44,7 @@ export const departments = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
 
@@ -52,8 +52,8 @@ export const departments = pgTable(
     departmentCode: varchar("department_code", { length: 20 }).notNull(),
     departmentName: varchar("department_name", { length: 255 }).notNull(),
     departmentNameId: varchar("department_name_id", { length: 255 }),
-    parentDepartmentId: uuid("parent_department_id"),
-    headId: uuid("head_id"), // Will reference employees (no FK to avoid circular)
+    parentDepartmentId: uuid("parent_department_id"), // Self-reference - FK added via migration
+    headId: uuid("head_id"), // References employees - FK constraint added via migration to avoid circular reference
     isActive: boolean("is_active").default(true),
     notes: text("notes"),
   },
@@ -117,7 +117,7 @@ export const employees = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
 
@@ -134,7 +134,7 @@ export const employees = pgTable(
     positionId: uuid("position_id").references(() => positions.id, {
       onDelete: "set null",
     }),
-    managerId: uuid("manager_id"), // Self-reference without FK to avoid circular
+    managerId: uuid("manager_id"), // Self-reference - FK constraint added via migration to avoid circular reference
 
     // Employment Details
     employmentType: employmentTypeEnum("employment_type").notNull(),
@@ -262,7 +262,7 @@ export const leaves = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
 
@@ -308,7 +308,7 @@ export const attendance = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
 
@@ -355,7 +355,7 @@ export const payrollRuns = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
 
@@ -504,6 +504,24 @@ export const departmentsRelations = relations(departments, ({ one, many }) => ({
     fields: [departments.organizationId],
     references: [organizations.id],
   }),
+  branch: one(organizations, {
+    fields: [departments.branchId],
+    references: [organizations.id],
+    relationName: "departmentBranch",
+  }),
+  parentDepartment: one(departments, {
+    fields: [departments.parentDepartmentId],
+    references: [departments.id],
+    relationName: "departmentParent",
+  }),
+  childDepartments: many(departments, {
+    relationName: "departmentParent",
+  }),
+  head: one(employees, {
+    fields: [departments.headId],
+    references: [employees.id],
+    relationName: "departmentHead",
+  }),
   employees: many(employees),
   positions: many(positions),
 }));
@@ -541,6 +559,17 @@ export const employeesRelations = relations(employees, ({ one, many }) => ({
   position: one(positions, {
     fields: [employees.positionId],
     references: [positions.id],
+  }),
+  manager: one(employees, {
+    fields: [employees.managerId],
+    references: [employees.id],
+    relationName: "employeeManager",
+  }),
+  directReports: many(employees, {
+    relationName: "employeeManager",
+  }),
+  headOfDepartments: many(departments, {
+    relationName: "departmentHead",
   }),
   salaryComponents: many(employeeSalaryComponents),
   attendance: many(attendance),

@@ -29,7 +29,7 @@ import {
   bsonFields,
   softDeleteFields,
 } from "./core";
-import { organizations } from "./organization";
+import { organizations, branches } from "./organization";
 import { users } from "./users";
 import { patients } from "./patients";
 import { polyclinics } from "./practitioners";
@@ -53,7 +53,7 @@ export const encounters = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
     patientId: uuid("patient_id")
@@ -62,9 +62,9 @@ export const encounters = pgTable(
     practitionerId: uuid("practitioner_id")
       .notNull()
       .references(() => practitioners.id, { onDelete: "set null" }),
-    polyclinicId: uuid("polyclinic_id")
-      .notNull()
-      .references(() => polyclinics.id, { onDelete: "set null" }),
+    polyclinicId: uuid("polyclinic_id").references(() => polyclinics.id, {
+      onDelete: "set null",
+    }),
     appointmentId: uuid("appointment_id").references(() => appointments.id, {
       onDelete: "set null",
     }),
@@ -277,6 +277,14 @@ export const prescriptions = pgTable(
       "pending"
     ),
     dispensedAt: timestamp("dispensed_at"),
+
+    // Signature/Authorization (for accreditation compliance)
+    isSignedOff: boolean("is_signed_off").default(false),
+    signedOffAt: timestamp("signed_off_at"),
+    signedOffBy: uuid("signed_off_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+
     satusehatMedicationRequestId: varchar("satusehat_medication_request_id", {
       length: 100,
     }),
@@ -295,6 +303,7 @@ export const prescriptions = pgTable(
     index("idx_prescription_encounter_id").on(table.encounterId),
     uniqueIndex("idx_prescription_number").on(table.prescriptionNumber),
     index("idx_prescription_status").on(table.status),
+    index("idx_prescription_signed_off").on(table.isSignedOff),
     index("idx_prescription_satusehat_synced").on(table.isSatusehatSynced),
     index("idx_prescription_jkn_synced").on(table.isJknSynced),
   ]
@@ -436,10 +445,19 @@ export const referrals = pgTable(
     isUrgent: boolean("is_urgent").default(false),
     status: varchar("status", { length: 20 }).default("pending"),
     notes: text("notes"),
+
+    // Signature/Authorization (for accreditation compliance)
+    isSignedOff: boolean("is_signed_off").default(false),
+    signedOffAt: timestamp("signed_off_at"),
+    signedOffBy: uuid("signed_off_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
   },
   (table) => [
     index("idx_referral_encounter_id").on(table.encounterId),
     uniqueIndex("idx_referral_number").on(table.referralNumber),
+    index("idx_referral_status").on(table.status),
+    index("idx_referral_signed_off").on(table.isSignedOff),
   ]
 );
 
@@ -479,6 +497,13 @@ export const procedures = pgTable(
     followUpRequired: boolean("follow_up_required").default(false),
     notes: text("notes"),
 
+    // Signature/Authorization (for accreditation compliance)
+    isSignedOff: boolean("is_signed_off").default(false),
+    signedOffAt: timestamp("signed_off_at"),
+    signedOffBy: uuid("signed_off_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+
     // SatuSehat Integration
     satusehatProcedureId: varchar("satusehat_procedure_id", { length: 100 }),
 
@@ -499,6 +524,7 @@ export const procedures = pgTable(
     index("idx_procedure_category").on(table.category),
     index("idx_procedure_icd9cm").on(table.icd9cmCode),
     index("idx_procedure_performed_at").on(table.performedAt),
+    index("idx_procedure_signed_off").on(table.isSignedOff),
     index("idx_procedure_satusehat_synced").on(table.isSatusehatSynced),
     index("idx_procedure_jkn_synced").on(table.isJknSynced),
   ]
@@ -532,10 +558,18 @@ export const medicalCertificates = pgTable(
     printedBy: uuid("printed_by").references(() => users.id, {
       onDelete: "set null",
     }),
+
+    // Signature/Authorization (for accreditation compliance)
+    isSignedOff: boolean("is_signed_off").default(false),
+    signedOffAt: timestamp("signed_off_at"),
+    signedOffBy: uuid("signed_off_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
   },
   (table) => [
     index("idx_medical_certificate_encounter_id").on(table.encounterId),
     uniqueIndex("idx_medical_certificate_number").on(table.certificateNumber),
+    index("idx_medical_certificate_signed_off").on(table.isSignedOff),
   ]
 );
 
@@ -833,6 +867,23 @@ export const growthMeasurements = pgTable(
     index("idx_growth_measurement_date").on(table.measurementDate),
   ]
 );
+
+// ============================================================================
+// TYPE EXPORTS FOR REPOSITORIES
+// ============================================================================
+
+export type EncounterRow = typeof encounters.$inferSelect;
+export type NewEncounterRow = typeof encounters.$inferInsert;
+export type VitalSignsRow = typeof vitalSigns.$inferSelect;
+export type NewVitalSignsRow = typeof vitalSigns.$inferInsert;
+export type DiagnosisRow = typeof diagnoses.$inferSelect;
+export type NewDiagnosisRow = typeof diagnoses.$inferInsert;
+export type PrescriptionRow = typeof prescriptions.$inferSelect;
+export type NewPrescriptionRow = typeof prescriptions.$inferInsert;
+export type ProcedureRow = typeof procedures.$inferSelect;
+export type NewProcedureRow = typeof procedures.$inferInsert;
+export type ReferralRow = typeof referrals.$inferSelect;
+export type NewReferralRow = typeof referrals.$inferInsert;
 
 // ============================================================================
 // RELATIONS

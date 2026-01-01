@@ -20,7 +20,7 @@ import {
   bsonFields,
   softDeleteFields,
 } from "./core";
-import { organizations } from "./organization";
+import { organizations, branches } from "./organization";
 
 // ============================================================================
 // USER ACCESS MANAGEMENT TABLES
@@ -39,7 +39,7 @@ export const users = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
     username: varchar("username", { length: 50 }).notNull().unique(),
@@ -105,7 +105,7 @@ export const userInvitations = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
     email: varchar("email", { length: 255 }).notNull(),
@@ -148,7 +148,7 @@ export const userSessions = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
     token: varchar("token", { length: 500 }).notNull().unique(),
@@ -195,7 +195,7 @@ export const userBranches = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     branchId: uuid("branch_id")
       .notNull()
-      .references(() => organizations.id, { onDelete: "cascade" }),
+      .references(() => branches.id, { onDelete: "cascade" }),
     isPrimary: boolean("is_primary").default(false),
     permissions: jsonb("permissions").$type<{
       canView?: boolean;
@@ -227,7 +227,7 @@ export const auditLogs = pgTable(
     organizationId: uuid("organization_id").references(() => organizations.id, {
       onDelete: "cascade",
     }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
     userId: uuid("user_id").references(() => users.id, {

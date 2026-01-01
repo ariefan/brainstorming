@@ -20,7 +20,30 @@
       "Bash(python:*)",
       "Bash(node:*)",
       "Bash(npx drizzle-kit generate:*)",
-      "Bash(npx drizzle-kit:*)"
+      "Bash(npx drizzle-kit:*)",
+      "Bash(pnpm build:*)",
+      "Bash(npx tsp:*)",
+      "Bash(pnpm exec tsp:*)",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm generate:*)",
+      "Bash(xargs:*)",
+      "Bash(find:*)",
+      "Bash(pnpm build:tsp:*)",
+      "Bash(npx openapi-ts:*)",
+      "Bash(pnpm typecheck:*)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm dev)",
+      "Bash(curl:*)",
+      "Bash(timeout 10 pnpm dev:*)",
+      "Bash(ORG_ID=\"a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11\")",
+      "Bash(PRACTITIONER_ID=\"5eff7180-9b49-45c1-8786-ca3fc472b7f5\":*)",
+      "Bash(__NEW_LINE__ echo \"=== Practitioners LIST ===\")",
+      "Bash(ls:*)",
+      "Bash(npx create-next-app@latest:*)",
+      "Bash(pnpm dlx:*)",
+      "Bash(npx shadcn@latest add form input label select textarea checkbox dialog sheet tabs separator scroll-area skeleton popover calendar sonner alert-description -y)",
+      "Bash(npx shadcn@latest add form input label select textarea checkbox dialog sheet tabs separator scroll-area skeleton popover calendar sonner alert -y)",
+      "Bash(npx shadcn@latest add:*)"
     ]
   }
 }

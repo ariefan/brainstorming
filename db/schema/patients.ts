@@ -21,7 +21,7 @@ import {
   BsonResource,
   fullFields,
 } from "./core";
-import { organizations } from "./organization";
+import { organizations, branches } from "./organization";
 import { users } from "./users";
 
 // ============================================================================
@@ -41,7 +41,7 @@ export const patients = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
     mrn: varchar("mrn", { length: 30 }).notNull().unique(), // Medical Record Number
@@ -204,6 +204,19 @@ export const familyRelationships = pgTable(
     index("idx_family_relationship_type").on(table.relationshipType),
   ]
 );
+
+// ============================================================================
+// TYPE EXPORTS FOR REPOSITORIES
+// ============================================================================
+
+export type PatientRow = typeof patients.$inferSelect;
+export type NewPatientRow = typeof patients.$inferInsert;
+export type AllergyRow = typeof allergies.$inferSelect;
+export type NewAllergyRow = typeof allergies.$inferInsert;
+export type ChronicConditionRow = typeof chronicConditions.$inferSelect;
+export type NewChronicConditionRow = typeof chronicConditions.$inferInsert;
+export type FamilyRelationshipRow = typeof familyRelationships.$inferSelect;
+export type NewFamilyRelationshipRow = typeof familyRelationships.$inferInsert;
 
 // ============================================================================
 // RELATIONS

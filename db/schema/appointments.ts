@@ -23,7 +23,7 @@ import {
   bsonFields,
   softDeleteFields,
 } from "./core";
-import { organizations } from "./organization";
+import { organizations, branches } from "./organization";
 import { users } from "./users";
 import { patients } from "./patients";
 import { polyclinics } from "./practitioners";
@@ -46,7 +46,7 @@ export const appointments = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
     patientId: uuid("patient_id")
@@ -55,9 +55,9 @@ export const appointments = pgTable(
     practitionerId: uuid("practitioner_id")
       .notNull()
       .references(() => practitioners.id, { onDelete: "set null" }),
-    polyclinicId: uuid("polyclinic_id")
-      .notNull()
-      .references(() => polyclinics.id, { onDelete: "set null" }),
+    polyclinicId: uuid("polyclinic_id").references(() => polyclinics.id, {
+      onDelete: "set null",
+    }),
     appointmentNumber: varchar("appointment_number", { length: 30 })
       .notNull()
       .unique(),
@@ -87,6 +87,11 @@ export const appointments = pgTable(
     }),
     cancellationReason: text("cancellation_reason"),
     noShowAt: timestamp("no_show_at"),
+
+    // Payment/Insurance fields
+    payerType: varchar("payer_type", { length: 20 }), // self_pay, bpjs, insurance
+    bpjsNumber: varchar("bpjs_number", { length: 20 }),
+    referralNumber: varchar("referral_number", { length: 50 }),
     bpjsAntreanKodeBooking: varchar("bpjs_antrean_kode_booking", {
       length: 30,
     }),
@@ -152,7 +157,7 @@ export const queues = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    branchId: uuid("branch_id").references(() => organizations.id, {
+    branchId: uuid("branch_id").references(() => branches.id, {
       onDelete: "set null",
     }),
     polyclinicId: uuid("polyclinic_id")
@@ -248,7 +253,7 @@ export const queueDisplayConfigs = pgTable(
       .references(() => organizations.id, { onDelete: "cascade" }),
     branchId: uuid("branch_id")
       .notNull()
-      .references(() => organizations.id, { onDelete: "cascade" }),
+      .references(() => branches.id, { onDelete: "cascade" }),
     polyclinicId: uuid("polyclinic_id")
       .notNull()
       .references(() => polyclinics.id, { onDelete: "cascade" }),
@@ -272,6 +277,21 @@ export const queueDisplayConfigs = pgTable(
     index("idx_queue_display_active").on(table.isActive),
   ]
 );
+
+// ============================================================================
+// TYPE EXPORTS FOR REPOSITORIES
+// ============================================================================
+
+export type AppointmentRow = typeof appointments.$inferSelect;
+export type NewAppointmentRow = typeof appointments.$inferInsert;
+export type AppointmentReminderRow = typeof appointmentReminders.$inferSelect;
+export type NewAppointmentReminderRow = typeof appointmentReminders.$inferInsert;
+export type QueueRow = typeof queues.$inferSelect;
+export type NewQueueRow = typeof queues.$inferInsert;
+export type QueueCallLogRow = typeof queueCallLogs.$inferSelect;
+export type NewQueueCallLogRow = typeof queueCallLogs.$inferInsert;
+export type QueueDisplayConfigRow = typeof queueDisplayConfigs.$inferSelect;
+export type NewQueueDisplayConfigRow = typeof queueDisplayConfigs.$inferInsert;
 
 // ============================================================================
 // RELATIONS
